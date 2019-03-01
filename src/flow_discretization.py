@@ -1,0 +1,170 @@
+import logging, sys
+import scipy.sparse as sps
+import numpy as np
+import porepy as pp
+
+# ------------------------------------------------------------------------------#
+
+def setup_custom_logger():
+    formatter = logging.Formatter(
+        fmt="%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+    )
+    handler = logging.FileHandler("log.txt", mode="w")
+    handler.setFormatter(formatter)
+    screen_handler = logging.StreamHandler(stream=sys.stdout)
+    screen_handler.setFormatter(formatter)
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+
+    logger.addHandler(handler)
+    logger.addHandler(screen_handler)
+    return logger
+
+
+logger = setup_custom_logger()
+
+# ------------------------------------------------------------------------------#
+
+class Flow(object):
+
+    def __init__(self, gb, folder, tol):
+
+        self.model = "flow"
+        self.gb = gb
+
+        # discretization operator name
+        self.discr_name = "flux"
+        self.discr = pp.RT0(self.model)
+        self.coupling = pp.RobinCoupling(self.model, self.discr)
+
+        # master variable name
+        self.variable = "flow_variable"
+        self.mortar = "lambda_" + self.variable
+
+        # post process variables
+        self.pressure = "pressure"
+        self.flux = "darcy_flux"  # it has to be this one
+        self.P0_flux = "P0_darcy_flux"
+
+        self.folder = folder
+        self.tol = tol
+
+    def data(self, data, bc_flag):
+
+        for g, d in self.gb:
+            param = {}
+
+            unity = np.ones(g.num_cells)
+            zeros = np.zeros(g.num_cells)
+            empty = np.empty(0)
+
+            d["is_tangential"] = True
+            d["tol"] = self.tol
+
+            # assign permeability
+            if g.dim < self.gb.dim_max():
+                kxx = data["kf_t"] * unity
+                perm = pp.SecondOrderTensor(1, kxx=kxx, kyy=1, kzz=1)
+                aperture = data["aperture"] * unity
+
+            else:
+                kxx = data["k"] * unity
+                if g.dim == 2:
+                    perm = pp.SecondOrderTensor(g.dim, kxx=kxx, kyy=kxx, kzz=1)
+                else:
+                    perm = pp.SecondOrderTensor(g.dim, kxx=kxx, kyy=kxx, kzz=kxx)
+                aperture = unity
+
+            param["second_order_tensor"] = perm
+            param["aperture"] = aperture
+
+            # Boundaries
+            b_faces = g.tags["domain_boundary_faces"].nonzero()[0]
+            if b_faces.size:
+                labels, bc_val = bc_flag(g, data, self.tol)
+                param["bc"] = pp.BoundaryCondition(g, b_faces, labels)
+            else:
+                bc_val = np.zeros(g.num_faces)
+                param["bc"] = pp.BoundaryCondition(g, empty, empty)
+
+            param["bc_values"] = bc_val
+
+            d[pp.PARAMETERS] = pp.Parameters(g, self.model, param)
+            d[pp.DISCRETIZATION_MATRICES] = {self.model: {}}
+
+        for e, d in self.gb.edges():
+            g_l = self.gb.nodes_of_edge(e)[0]
+
+            mg = d["mortar_grid"]
+            check_P = mg.slave_to_mortar_avg()
+
+            aperture = self.gb.node_props(g_l, pp.PARAMETERS)[self.model]["aperture"]
+            gamma = check_P * aperture
+            kn = data["kf_n"] * np.ones(mg.num_cells) / gamma
+            param = {"normal_diffusivity": kn}
+
+            d[pp.PARAMETERS] = pp.Parameters(e, self.model, param)
+            d[pp.DISCRETIZATION_MATRICES] = {self.model: {}}
+
+
+    # ------------------------------------------------------------------------------#
+
+
+    def matrix(self):
+
+        for g, d in self.gb:
+            d[pp.PRIMARY_VARIABLES] = {self.variable: {"cells": 1, "faces": 1}}
+            d[pp.DISCRETIZATION] = {self.variable: {self.discr_name: self.discr}}
+
+        # define the interface terms to couple the grids
+        for e, d in self.gb.edges():
+            g_slave, g_master = self.gb.nodes_of_edge(e)
+            d[pp.PRIMARY_VARIABLES] = {self.mortar: {"cells": 1}}
+            d[pp.COUPLING_DISCRETIZATION] = {
+                self.flux: {
+                    g_slave: (self.variable, self.discr_name),
+                    g_master: (self.variable, self.discr_name),
+                    e: (self.mortar, self.coupling),
+                }
+            }
+
+        # solution of the darcy problem
+        assembler = pp.Assembler()
+
+        logger.info("Assemble the flow problem")
+        A, b, block_dof, full_dof = assembler.assemble_matrix_rhs(self.gb)
+        logger.info("done")
+
+        return A, b, block_dof, full_dof
+
+    # ------------------------------------------------------------------------------#
+
+    def solve(self, A, b, block_dof, full_dof):
+
+        logger.info("Solve the linear system")
+        x = sps.linalg.spsolve(A, b)
+        logger.info("done")
+
+        return x
+
+    # ------------------------------------------------------------------------------#
+
+    def export(self, x, block_dof, full_dof):
+
+        logger.info("Variable post-process")
+        assembler = pp.Assembler()
+        assembler.distribute_variable(self.gb, x, block_dof, full_dof)
+        for g, d in self.gb:
+            d[self.pressure] = self.discr.extract_pressure(g, d[self.variable], d)
+            d[self.flux] = self.discr.extract_flux(g, d[self.variable], d)
+
+        # export the P0 flux reconstruction
+        pp.project_flux(self.gb, self.discr, self.flux, self.P0_flux, self.mortar)
+
+        save = pp.Exporter(self.gb, "solution", folder=self.folder)
+        save.write_vtk([self.pressure, self.P0_flux])
+
+        logger.info("done")
+
+    # ------------------------------------------------------------------------------#
