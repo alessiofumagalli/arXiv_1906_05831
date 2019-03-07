@@ -66,18 +66,24 @@ class Multiscale(object):
 
     # ------------------------------------------------------------------------------#
 
-    def high_dim_matrices(self, A, b):
+    def high_dim_matrices(self, A):
 
         # extract the blocks for the higher dimension
         dof = np.r_[self.dof_hn, self.dof_he]
         self.A_h = self.block(A, dof, dof)
-        self.b_h = b[dof]
 
         # Couple the 1 co-dimensional pressure to the mortar variables
         self.C_h = self.block(A, self.dof_he, self.dof_ln)
 
         # Realise the jump operator given the mortar variables
         self.C_l = self.block(A, self.dof_ln, self.dof_he)
+
+    # ------------------------------------------------------------------------------#
+
+    def high_dim_rhs(self, b):
+        # extract the blocks for the higher dimension
+        dof = np.r_[self.dof_hn, self.dof_he]
+        self.b_h = b[dof]
 
     # ------------------------------------------------------------------------------#
 
@@ -116,10 +122,12 @@ class Multiscale(object):
         # save the bases in a csr format
         self.bases = sps.csr_matrix(self.bases)
 
-        # solve for non-zero boundary conditions
-        self.x_h = -self.C_l * self.LU(self.b_h)[-dof_bases:]
+    # ------------------------------------------------------------------------------#
 
-        return {"solve_h": num_bases + 1}
+    def solve_non_homogeneous(self):
+        # solve for non-zero boundary conditions and right-hand side
+        dof_bases = self.C_h.shape[0]
+        self.x_h = -self.C_l * self.LU(self.b_h)[-dof_bases:]
 
     # ------------------------------------------------------------------------------#
 

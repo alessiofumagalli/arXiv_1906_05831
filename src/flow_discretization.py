@@ -1,28 +1,8 @@
-import logging, sys
 import scipy.sparse as sps
 import numpy as np
 import porepy as pp
 
-# ------------------------------------------------------------------------------#
-
-def setup_custom_logger():
-    formatter = logging.Formatter(
-        fmt="%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-    )
-    handler = logging.FileHandler("log.txt", mode="w")
-    handler.setFormatter(formatter)
-    screen_handler = logging.StreamHandler(stream=sys.stdout)
-    screen_handler.setFormatter(formatter)
-
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-
-    logger.addHandler(handler)
-    logger.addHandler(screen_handler)
-    return logger
-
-
-logger = setup_custom_logger()
+from logger import logger
 
 # ------------------------------------------------------------------------------#
 
@@ -36,6 +16,11 @@ class Flow(object):
         # discretization operator name
         self.discr_name = "flux"
         self.discr = pp.RT0(self.model)
+
+        self.mass_name = "mass"
+        self.mass = pp.MixedMassMatrix(self.model)
+
+        self.coupling_name = self.discr_name + "_coupling"
         self.coupling = pp.RobinCoupling(self.model, self.discr)
 
         # master variable name
@@ -47,8 +32,11 @@ class Flow(object):
         self.flux = "darcy_flux"  # it has to be this one
         self.P0_flux = "P0_darcy_flux"
 
-        self.folder = folder
+        # tolerance
         self.tol = tol
+
+        # exporter
+        self.save = pp.Exporter(self.gb, "solution", folder=folder)
 
     def data(self, data, bc_flag):
 
@@ -78,6 +66,7 @@ class Flow(object):
 
             param["second_order_tensor"] = perm
             param["aperture"] = aperture
+            param["mass_weight"] = data["mass_weight"]
 
             # Boundaries
             b_faces = g.tags["domain_boundary_faces"].nonzero()[0]
@@ -91,7 +80,6 @@ class Flow(object):
             param["bc_values"] = bc_val
 
             d[pp.PARAMETERS] = pp.Parameters(g, self.model, param)
-            d[pp.DISCRETIZATION_MATRICES] = {self.model: {}}
 
         for e, d in self.gb.edges():
             g_l = self.gb.nodes_of_edge(e)[0]
@@ -105,38 +93,57 @@ class Flow(object):
             param = {"normal_diffusivity": kn}
 
             d[pp.PARAMETERS] = pp.Parameters(e, self.model, param)
-            d[pp.DISCRETIZATION_MATRICES] = {self.model: {}}
 
+        # set now the discretization
 
-    # ------------------------------------------------------------------------------#
-
-
-    def matrix(self):
-
+        # set the discretization for the grids
         for g, d in self.gb:
             d[pp.PRIMARY_VARIABLES] = {self.variable: {"cells": 1, "faces": 1}}
-            d[pp.DISCRETIZATION] = {self.variable: {self.discr_name: self.discr}}
+            d[pp.DISCRETIZATION] = {self.variable: {self.discr_name: self.discr,
+                                                    self.mass_name: self.mass}}
 
         # define the interface terms to couple the grids
         for e, d in self.gb.edges():
             g_slave, g_master = self.gb.nodes_of_edge(e)
             d[pp.PRIMARY_VARIABLES] = {self.mortar: {"cells": 1}}
             d[pp.COUPLING_DISCRETIZATION] = {
-                self.flux: {
+                self.coupling_name: {
                     g_slave: (self.variable, self.discr_name),
                     g_master: (self.variable, self.discr_name),
                     e: (self.mortar, self.coupling),
                 }
             }
 
+    # ------------------------------------------------------------------------------#
+
+    def matrix_rhs(self):
+
+        # empty the matrices
+        for g, d in self.gb:
+            d[pp.DISCRETIZATION_MATRICES] = {self.model: {}}
+
+        for e, d in self.gb.edges():
+            d[pp.DISCRETIZATION_MATRICES] = {self.model: {}}
+
         # solution of the darcy problem
         assembler = pp.Assembler()
 
         logger.info("Assemble the flow problem")
-        A, b, block_dof, full_dof = assembler.assemble_matrix_rhs(self.gb)
-        logger.info("done")
+        block_A, block_b, block_dof, full_dof = assembler.assemble_matrix_rhs(self.gb,
+            active_variables=[self.variable, self.mortar], add_matrices=False)
 
-        return A, b, block_dof, full_dof
+        # unpack the matrices just computed
+        coupling_name = self.coupling_name + (
+            "_" + self.mortar + "_" + self.variable + "_" + self.variable
+        )
+        discr_name = self.discr_name + "_" + self.variable
+        mass_name = self.mass_name + "_" + self.variable
+
+        M = block_A[mass_name]
+        A = M + block_A[discr_name] + block_A[coupling_name]
+        b = block_b[discr_name] + block_b[coupling_name]
+
+        return A, M, b, block_dof, full_dof
 
     # ------------------------------------------------------------------------------#
 
@@ -150,7 +157,7 @@ class Flow(object):
 
     # ------------------------------------------------------------------------------#
 
-    def export(self, x, block_dof, full_dof):
+    def extract(self, x, block_dof, full_dof):
 
         logger.info("Variable post-process")
         assembler = pp.Assembler()
@@ -161,10 +168,18 @@ class Flow(object):
 
         # export the P0 flux reconstruction
         pp.project_flux(self.gb, self.discr, self.flux, self.P0_flux, self.mortar)
-
-        save = pp.Exporter(self.gb, "solution", folder=self.folder)
-        save.write_vtk([self.pressure, self.P0_flux])
-
         logger.info("done")
+
+    # ------------------------------------------------------------------------------#
+
+    def export(self, time_step=None):
+        logger.info("Export variables")
+        self.save.write_vtk([self.pressure, self.P0_flux], time_step=time_step)
+        logger.info("done")
+
+    # ------------------------------------------------------------------------------#
+
+    def export_pvd(self, steps):
+        self.save.write_pvd(steps)
 
     # ------------------------------------------------------------------------------#
