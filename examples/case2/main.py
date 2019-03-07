@@ -2,8 +2,7 @@ import numpy as np
 import porepy as pp
 
 import sys; sys.path.insert(0, "../../src/")
-from flow_discretization import Flow
-from multiscale import Multiscale
+from algorithm import MoLDD
 
 def bc_flag(g, data, tol):
     b_faces = g.tags["domain_boundary_faces"].nonzero()[0]
@@ -29,14 +28,13 @@ def bc_flag(g, data, tol):
 
     return labels, bc_val
 
-
 def main():
 
     h = 0.025
     tol = 1e-6
     mesh_args = {"mesh_size_frac": h}
     domain = {"xmin": 0, "xmax": 1, "ymin": 0, "ymax": 2}
-    folder = "case1"
+    folder = "case2"
 
     # Point coordinates, as a 2xn array
     p = np.array([[0, 1], [1, 1]])
@@ -52,47 +50,28 @@ def main():
     #pp.plot_grid(gb, alpha=0, info="all")
 
     # the flow problem
+    time_step = 0.1
     param = {
         "domain": gb.bounding_box(as_dict=True),
         "tol": tol,
         "k": 1,
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
-        "mass_weight": 0, # stationary problem
+        "mass_weight": 1.0/time_step, # inverse of the time step
+        "num_steps": 10,
     }
 
-    # declare the flow problem and the multiscale solver
-    flow = Flow(gb, folder, tol)
-    ms = Multiscale(gb)
+    # declare the algorithm
+    algo = MoLDD(gb, folder, tol)
 
     # set the data
-    flow.data(param, bc_flag)
+    algo.data(param, bc_flag)
 
-    # create the matrix for the Darcy problem
-    A, _, b, block_dof, full_dof = flow.matrix_rhs()
-
-    # extract the block dofs for the ms
-    ms.extract_dof(block_dof, full_dof)
-
-    # extract the higher domensional matrices
-    ms.high_dim_matrices(A)
-    ms.compute_bases()
-
-    # extract the higher dimensional right-hand side and compute its contribution
-    ms.high_dim_rhs(b)
-    ms.solve_non_homogeneous()
-
-    # assemble the problem in the lower dimensional problem
-    x_l = ms.solve_low_dim(A, b)
-
-    # solve the higher dimensional problem
-    x_h = ms.solve_high_dim(x_l)
-
-    # create the global vector
-    x = ms.concatenate(x_h, x_l)
+    # data for the problem
+    conv = 1e-4
+    max_iter = 100
 
     # solve the problem
-    flow.extract(x, block_dof, full_dof)
-    flow.export()
+    algo.solve(conv, max_iter)
 
 if __name__ == "__main__":
     main()
