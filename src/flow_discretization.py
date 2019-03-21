@@ -23,6 +23,9 @@ class Flow(object):
         self.coupling_name = self.discr_name + "_coupling"
         self.coupling = pp.RobinCoupling(self.model, self.discr)
 
+        self.source_name = "source"
+        self.source = pp.DualScalarSource(self.model)
+
         # master variable name
         self.variable = "flow_variable"
         self.mortar = "lambda_" + self.variable
@@ -68,6 +71,8 @@ class Flow(object):
             param["aperture"] = aperture
             param["mass_weight"] = data["mass_weight"]
 
+            param["source"] = g.cell_volumes * (g.cell_centers[1, :] < 0.5+self.tol)
+
             # Boundaries
             b_faces = g.tags["domain_boundary_faces"].nonzero()[0]
             if b_faces.size:
@@ -100,7 +105,8 @@ class Flow(object):
         for g, d in self.gb:
             d[pp.PRIMARY_VARIABLES] = {self.variable: {"cells": 1, "faces": 1}}
             d[pp.DISCRETIZATION] = {self.variable: {self.discr_name: self.discr,
-                                                    self.mass_name: self.mass}}
+                                                    self.mass_name: self.mass,
+                                                    self.source_name: self.source}}
 
         # define the interface terms to couple the grids
         for e, d in self.gb.edges():
@@ -138,16 +144,17 @@ class Flow(object):
         )
         discr_name = self.discr_name + "_" + self.variable
         mass_name = self.mass_name + "_" + self.variable
+        source_name = self.source_name + "_" + self.variable
 
         M = block_A[mass_name]
         A = M + block_A[discr_name] + block_A[coupling_name]
-        b = block_b[discr_name] + block_b[coupling_name]
+        b = block_b[discr_name] + block_b[coupling_name] + block_b[source_name]
 
         return A, M, b, block_dof, full_dof
 
     # ------------------------------------------------------------------------------#
 
-    def solve(self, A, b, block_dof, full_dof):
+    def solve(self, A, b):
 
         logger.info("Solve the linear system")
         x = sps.linalg.spsolve(A, b)
