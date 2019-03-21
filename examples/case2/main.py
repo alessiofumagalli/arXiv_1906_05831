@@ -18,19 +18,21 @@ def bc_flag(g, data, tol):
     labels = np.array(["neu"] * b_faces.size)
     bc_val = np.zeros(g.num_faces)
 
-    if g.dim == 2:
-        labels[in_flow + out_flow] = "dir"
-        bc_val[b_faces[in_flow]] = 0
-        bc_val[b_faces[out_flow]] = 1
-    else:
-        labels[:] = "dir"
-        bc_val[b_faces] = (b_face_centers[0, :] < 0.5).astype(np.float)
+    labels[:] = "dir" #
+
+#    if g.dim == 2:
+#        labels[in_flow + out_flow] = "dir"
+#        bc_val[b_faces[in_flow]] = 0
+#        bc_val[b_faces[out_flow]] = 1
+#    else:
+#        labels[:] = "dir"
+#        bc_val[b_faces] = (b_face_centers[0, :] < 0.5).astype(np.float)
 
     return labels, bc_val
 
 def main():
 
-    h = 0.025
+    h = 0.125
     tol = 1e-6
     mesh_args = {"mesh_size_frac": h}
     domain = {"xmin": 0, "xmax": 1, "ymin": 0, "ymax": 2}
@@ -55,9 +57,9 @@ def main():
         "domain": gb.bounding_box(as_dict=True),
         "tol": tol,
         "k": 1,
-        "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
+        "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e8,
         "mass_weight": 1.0/time_step, # inverse of the time step
-        "num_steps": 10,
+        "num_steps": 5,
     }
 
     # declare the algorithm
