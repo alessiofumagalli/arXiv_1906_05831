@@ -82,7 +82,8 @@ class MoLDD(object):
                 x_l = self.ms.solve_low_dim(A, rhs)
                 logger.info("done")
 
-                # distribute the variables to compute the error
+                # distribute the variables to compute the error and to compute the
+                # P0 projected flux, useful for the non-linear part
                 logger.info("Compute the error")
                 x = self.ms.concatenate(None, x_l)
                 self.flow.extract(x, block_dof, full_dof)
