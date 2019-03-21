@@ -146,7 +146,8 @@ class Flow(object):
         mass_name = self.mass_name + "_" + self.variable
         source_name = self.source_name + "_" + self.variable
 
-        M = block_A[mass_name]
+        # need a sign for the convention of the conservation equation
+        M = - block_A[mass_name]
         A = M + block_A[discr_name] + block_A[coupling_name]
         b = block_b[discr_name] + block_b[coupling_name] + block_b[source_name]
 
