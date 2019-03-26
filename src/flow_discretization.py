@@ -167,7 +167,7 @@ class Flow(object):
 
     # ------------------------------------------------------------------------------#
 
-    def update_rhs(self, rhs):
+    def update_rhs(self):
 
         for g, d in self.gb:
             param = {}
@@ -181,6 +181,7 @@ class Flow(object):
                 # non_linear and jacobian coefficient
                 aperture = self.gb.node_props(g, pp.PARAMETERS)[self.model][
                     "aperture"]
+                # assuming ksi(u) = beta * norm(u) * u
                 kf_inv = self.data["L"] - self.data["beta"] * norm_u
                 kf = (1.0 / kf_inv / aperture) * unity
 
@@ -190,14 +191,7 @@ class Flow(object):
                 d[pp.PARAMETERS] = pp.Parameters(g, self.model, param)
 
         # get updated flux inner product matrix
-        A = self.matrix_rhs()[0]
-        # only multiply with fracture flux part of previous iteration vector
-        # TODO: update x
-        x = np.zeros(A.shape[0])
-        # update rhs with previous iteration vector
-        rhs += A * x
-
-        return rhs
+        return self.matrix_rhs()
 
     # ------------------------------------------------------------------------------#
 

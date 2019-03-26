@@ -1,5 +1,6 @@
 import numpy as np
 from logger import logger
+import porepy as pp
 
 from flow_discretization import Flow
 from multiscale import Multiscale
@@ -71,10 +72,11 @@ class MoLDD(object):
                 logger.info("Perform iteration number " )
 
                 # NOTE: we need to recompute only the lower dimensional matrices
-                # for simplicity we do for everything otherwise a complex mapping
-                # has to be coded. This point can be definitely improved.
+                # for simplicity we do for everything otherwise a complex
+                # mapping has to be coded. This point can be definitely
+                # improved.
                 logger.info("Re-compute the rhs due to the non-linear term")
-                rhs = self.flow.update_rhs(rhs)
+                rhs = self.update_rhs(rhs)
                 logger.info("done")
 
                 logger.info("Re-compute the matrices due to the non-linear term")
@@ -124,6 +126,33 @@ class MoLDD(object):
 
         logger.remove_tab()
         logger.info("done")
+
+    # ------------------------------------------------------------------------------#
+
+    def update_rhs(self, rhs):
+        # first update the stiffness matrix (fracture permeability)
+        A, _, _, block_dof, full_dof = self.flow.update_rhs()[0]
+
+        # multiply A with fracture flux part of previous iteration vector
+        x = np.zeros(A.shape[0])
+        # count the dof for each block
+        dof = np.cumsum(np.append(0, np.asarray(full_dof)))
+        # find fracture flux dof
+        for pair, bi in block_dof.items():
+            g = pair[0]
+            if isinstance(g, pp.Grid):
+                # we are actually dealing with a grid
+                if g.dim == 1:
+                    # local dof
+                    # NOTE: assume dof_loc = (u, p) and num_faces = num_flux_dof
+                    dof_loc = np.arange(dof[bi], dof[bi + 1])[:g.num_faces]
+                    # grid data
+                    d = self.gb.graph.node[g]
+                    # add previous iteration flux to those dof
+                    x[dof_loc] = d[self.flow.flux + "_old"]
+
+        # update rhs with previous iteration vector
+        return rhs + A * x
 
     # ------------------------------------------------------------------------------#
 
