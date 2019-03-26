@@ -73,8 +73,12 @@ class MoLDD(object):
                 # NOTE: we need to recompute only the lower dimensional matrices
                 # for simplicity we do for everything otherwise a complex mapping
                 # has to be coded. This point can be definitely improved.
+                logger.info("Re-compute the rhs due to the non-linear term")
+                rhs = self.flow.update_rhs(rhs)
+                logger.info("done")
+
                 logger.info("Re-compute the matrices due to the non-linear term")
-                A = self.flow.matrix_rhs()[0]
+                A = self.flow.update_matrix()[0]
                 logger.info("done")
 
                 # assemble the problem in the lower dimensional problem
@@ -127,10 +131,12 @@ class MoLDD(object):
         # extract the variable names
         pressure = self.flow.pressure
         flux = self.flow.flux
+        P0_flux = self.flow.P0_flux
 
         for g, d in self.gb:
             d[pressure + "_old"] = d[pressure]
             d[flux + "_old"] = d[flux]
+            d[P0_flux + "_old"] = d[P0_flux]
 
     # ------------------------------------------------------------------------------#
 

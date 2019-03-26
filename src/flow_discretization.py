@@ -12,6 +12,7 @@ class Flow(object):
 
         self.model = "flow"
         self.gb = gb
+        self.data = None
 
         # discretization operator name
         self.discr_name = "flux"
@@ -42,6 +43,7 @@ class Flow(object):
         self.save = pp.Exporter(self.gb, "solution", folder=folder)
 
     def data(self, data, bc_flag):
+        self.data = data
 
         for g, d in self.gb:
             param = {}
@@ -162,6 +164,63 @@ class Flow(object):
         logger.info("done")
 
         return x
+
+    # ------------------------------------------------------------------------------#
+
+    def update_rhs(self, rhs):
+
+        for g, d in self.gb:
+            param = {}
+            unity = np.ones(g.num_cells)
+
+            if g.dim == 1:
+                # P0-projected velocity field
+                P0u = d[self.P0_flux + "_old"]
+                norm_u = np.linalg.norm(P0u, axis=0)
+
+                # non_linear and jacobian coefficient
+                aperture = self.gb.node_props(g, pp.PARAMETERS)[self.model][
+                    "aperture"]
+                kf_inv = self.data["L"] - self.data["beta"] * norm_u
+                kf = (1.0 / kf_inv / aperture) * unity
+
+                # update permeability tensor
+                perm = pp.SecondOrderTensor(1, kxx=kf, kyy=1, kzz=1)
+                param["second_order_tensor"] = perm
+                d[pp.PARAMETERS] = pp.Parameters(g, self.model, param)
+
+        # get updated flux inner product matrix
+        A = self.matrix_rhs()[0]
+        # only multiply with fracture flux part of previous iteration vector
+        # TODO: update x
+        x = np.zeros(A.shape[0])
+        # update rhs with previous iteration vector
+        rhs += A * x
+
+        return rhs
+
+    # ------------------------------------------------------------------------------#
+
+    def update_matrix(self):
+
+        for g, d in self.gb:
+            param = {}
+            unity = np.ones(g.num_cells)
+
+            if g.dim == 1:
+                # non_linear and jacobian coefficient
+                kf_inv = 1.0 / self.data["kf_t"] + self.data["L"]
+                aperture = self.gb.node_props(g, pp.PARAMETERS)[self.model][
+                    "aperture"]
+                kf = (1.0 / kf_inv / aperture) * unity
+
+                # update permeability tensor
+                perm = pp.SecondOrderTensor(1, kxx=kf, kyy=1, kzz=1)
+                param["second_order_tensor"] = perm
+                d[pp.PARAMETERS] = pp.Parameters(g, self.model, param)
+
+        # get updated flux inner product matrix
+        return self.matrix_rhs()
 
     # ------------------------------------------------------------------------------#
 
