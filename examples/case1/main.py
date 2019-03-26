@@ -5,6 +5,9 @@ import sys; sys.path.insert(0, "../../src/")
 from flow_discretization import Flow
 from multiscale import Multiscale
 
+# TODO: L-test, beta-test
+
+
 def bc_flag(g, data, tol):
     b_faces = g.tags["domain_boundary_faces"].nonzero()[0]
     b_face_centers = g.face_centers[:, b_faces]
@@ -58,6 +61,8 @@ def main():
         "k": 1,
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
         "mass_weight": 0, # stationary problem
+        "L": 1, # l-scheme constant
+        "beta": 1, # non-linearity constant
     }
 
     # declare the flow problem and the multiscale solver

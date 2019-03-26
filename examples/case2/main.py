@@ -34,6 +34,7 @@ def main():
 
     h = 0.125
     tol = 1e-6
+    time_step = 1e-1 # time step
     mesh_args = {"mesh_size_frac": h}
     domain = {"xmin": 0, "xmax": 1, "ymin": 0, "ymax": 2}
     folder = "case2"
@@ -52,7 +53,6 @@ def main():
     #pp.plot_grid(gb, alpha=0, info="all")
 
     # the flow problem
-    time_step = 0.1
     param = {
         "domain": gb.bounding_box(as_dict=True),
         "tol": tol,
@@ -60,6 +60,8 @@ def main():
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e8,
         "mass_weight": 1.0/time_step, # inverse of the time step
         "num_steps": 5,
+        "L": 1,  # l-scheme constant
+        "beta": 1,  # non-linearity constant
     }
 
     # declare the algorithm

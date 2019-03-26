@@ -56,6 +56,8 @@ def main():
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e8,
         "mass_weight": 1.0/time_step, # inverse of the time step
         "num_steps": int(end_time/time_step),
+        "L": 1,  # l-scheme constant
+        "beta": 1,  # non-linearity constant
     }
 
     # create the Darcy problem
