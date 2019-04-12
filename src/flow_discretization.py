@@ -63,17 +63,14 @@ class Flow(object):
 
             else:
                 kxx = data["k"] * unity
-                if g.dim == 2:
-                    perm = pp.SecondOrderTensor(g.dim, kxx=kxx, kyy=kxx, kzz=1)
-                else:
-                    perm = pp.SecondOrderTensor(g.dim, kxx=kxx, kyy=kxx, kzz=kxx)
+                perm = pp.SecondOrderTensor(g.dim, kxx=kxx, kyy=kxx, kzz=1)
                 aperture = unity
 
             param["second_order_tensor"] = perm
             param["aperture"] = aperture
             param["mass_weight"] = data["mass_weight"]
 
-            param["source"] = g.cell_volumes * (g.cell_centers[1, :] < 0.5+self.tol)
+            param["source"] = g.cell_volumes * 0
 
             # Boundaries
             b_faces = g.tags["domain_boundary_faces"].nonzero()[0]
