@@ -94,12 +94,12 @@ class MoLDD(object):
                 x = self.ms.concatenate(None, x_l)
                 self.flow.extract(x, block_dof, full_dof)
 
-                # save the variable with "_old" suffix
-                self.save_old_variables()
-
                 # compute the error to stop the non-linear loop
                 err = self.compute_error()
                 logger.info("done, error " + str(err))
+
+                # save the variable with "_old" suffix
+                self.save_old_variables()
 
                 # increase the control loop variable
                 i += 1
