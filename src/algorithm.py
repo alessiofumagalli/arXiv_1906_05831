@@ -54,12 +54,12 @@ class MoLDD(object):
         for n in np.arange(self.num_steps):
             logger.info("Time step " + str(n))
             # define the rhs for the current step
-            rhs = b + M.dot(x)
+            rhs_time = b + M.dot(x)
 
             # extract the higher dimensional right-hand side and compute
             # its contribution
             logger.info("Extract the higher dimensional righ-hand side and compute its contribution")
-            self.ms.high_dim_rhs(rhs)
+            self.ms.high_dim_rhs(rhs_time)
             self.ms.solve_non_homogeneous()
             logger.info("done")
 
@@ -76,7 +76,7 @@ class MoLDD(object):
                 # mapping has to be coded. This point can be definitely
                 # improved.
                 logger.info("Re-compute the rhs due to the non-linear term")
-                rhs = self.update_rhs(rhs)
+                rhs = rhs_time + self.update_rhs()
                 logger.info("done")
 
                 logger.info("Re-compute the matrices due to the non-linear term")
@@ -129,9 +129,9 @@ class MoLDD(object):
 
     # ------------------------------------------------------------------------------#
 
-    def update_rhs(self, rhs):
+    def update_rhs(self):
         # first update the stiffness matrix (fracture permeability)
-        A, _, _, block_dof, full_dof = self.flow.update_rhs()[0]
+        A, _, _, block_dof, full_dof = self.flow.update_rhs()
 
         # multiply A with fracture flux part of previous iteration vector
         x = np.zeros(A.shape[0])
@@ -143,16 +143,16 @@ class MoLDD(object):
             if isinstance(g, pp.Grid):
                 # we are actually dealing with a grid
                 if g.dim == 1:
-                    # local dof
-                    # NOTE: assume dof_loc = (u, p) and num_faces = num_flux_dof
-                    dof_loc = np.arange(dof[bi], dof[bi + 1])[:g.num_faces]
-                    # grid data
                     d = self.gb.graph.node[g]
-                    # add previous iteration flux to those dof
-                    x[dof_loc] = d[self.flow.flux + "_old"]
+                    flux = d[self.flow.flux + "_old"]
+                    # extract previous iteration flux to those dof
+                    # consider in the A matrix only the block relative to the Hdiv mass
+                    # matrix
+                    dof_u = np.arange(dof[bi], dof[bi + 1])[:g.num_faces]
+                    x[dof_u] = A[np.ix_(dof_u, dof_u)].dot(flux)
 
-        # update rhs with previous iteration vector
-        return rhs + A * x
+        # return the extra term for the rhs with previous iteration vector
+        return x
 
     # ------------------------------------------------------------------------------#
 
