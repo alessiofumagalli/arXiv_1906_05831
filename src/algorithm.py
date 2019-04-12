@@ -170,18 +170,30 @@ class MoLDD(object):
     # ------------------------------------------------------------------------------#
 
     def compute_error(self):
-        # compute the error
-        # TODO the denominator
-
         # extract the variable names
         pressure = self.flow.pressure
-        flux = self.flow.flux
+        P0_flux = self.flow.P0_flux
 
         err = np.zeros(2)
         for g, d in self.gb:
             if g.dim < self.gb.dim_max():
-                err[0] += np.linalg.norm(d[pressure + "_old"] - d[pressure]) ** 2
-                err[1] += np.linalg.norm(d[flux + "_old"] - d[flux]) ** 2
+                # compute the (relative) error for the pressure
+                delta_p = np.power(d[pressure + "_old"] - d[pressure], 2)
+                int_delta_p = g.cell_volumes.dot(delta_p)
+
+                int_p = g.cell_volumes.dot(np.power(d[pressure + "_old"], 2))
+
+                err[0] += int_delta_p / (int_p if int_p else 1)
+
+                # compute the (relative) error for the reconstructed velocity
+                delta_P0u = d[P0_flux + "_old"] - d[P0_flux]
+                delta_P0u = np.einsum("ij,ij->j", delta_P0u, delta_P0u)
+                int_delta_P0u = g.cell_volumes.dot(delta_P0u)
+
+                P0u = np.einsum("ij,ij->j", d[P0_flux + "_old"], d[P0_flux + "_old"])
+                int_P0u = g.cell_volumes.dot(P0u)
+
+                err[1] += int_delta_P0u / (int_P0u if int_P0u else 1)
 
         return np.sqrt(err)
 
