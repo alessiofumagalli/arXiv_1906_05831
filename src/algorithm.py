@@ -49,6 +49,9 @@ class MoLDD(object):
         self.flow.extract(x, block_dof, full_dof)
         self.save_old_variables()
 
+        # variable to save the number of iterations needed at each time step
+        num_iter = np.zeros(self.num_steps)
+
         logger.info("Start the time loop with " + str(self.num_steps) + " steps")
         logger.add_tab()
         for n in np.arange(self.num_steps):
@@ -69,7 +72,7 @@ class MoLDD(object):
                         + str(max_iter) + "max iterations")
             logger.add_tab()
             while np.any(err > conv) and i < max_iter:
-                logger.info("Perform iteration number " )
+                logger.info("Perform iteration number " + str(i))
 
                 # NOTE: we need to recompute only the lower dimensional matrices
                 # for simplicity we do for everything otherwise a complex
@@ -106,6 +109,9 @@ class MoLDD(object):
             logger.remove_tab()
             logger.info("done")
 
+            # save the number of non linear iterations
+            num_iter[n] = i
+
             # solve the higher dimensional problem
             logger.info("Solve the high dimensional problem")
             x_h = self.ms.solve_high_dim(x_l)
@@ -126,6 +132,8 @@ class MoLDD(object):
 
         logger.remove_tab()
         logger.info("done")
+
+        return num_iter
 
     # ------------------------------------------------------------------------------#
 
