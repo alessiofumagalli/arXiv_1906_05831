@@ -17,9 +17,9 @@ class MoLDD(object):
 
     # ------------------------------------------------------------------------------#
 
-    def data(self, param, bc_flag):
+    def set_data(self, param, bc_flag):
         # set the data
-        self.flow.data(param, bc_flag)
+        self.flow.set_data(param, bc_flag)
         self.num_steps = param["num_steps"]
 
     # ------------------------------------------------------------------------------#

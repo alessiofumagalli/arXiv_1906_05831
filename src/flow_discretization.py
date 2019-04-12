@@ -42,7 +42,7 @@ class Flow(object):
         # exporter
         self.save = pp.Exporter(self.gb, "solution", folder=folder)
 
-    def data(self, data, bc_flag):
+    def set_data(self, data, bc_flag):
         self.data = data
 
         for g, d in self.gb:

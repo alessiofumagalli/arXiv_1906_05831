@@ -68,7 +68,7 @@ def main():
     algo = MoLDD(gb, folder, tol)
 
     # set the data
-    algo.data(param, bc_flag)
+    algo.set_data(param, bc_flag)
 
     # data for the problem
     conv = 1e-4
