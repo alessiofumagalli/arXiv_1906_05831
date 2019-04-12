@@ -18,15 +18,13 @@ def bc_flag(g, data, tol):
     labels = np.array(["neu"] * b_faces.size)
     bc_val = np.zeros(g.num_faces)
 
-    labels[:] = "dir" #
-
-#    if g.dim == 2:
-#        labels[in_flow + out_flow] = "dir"
-#        bc_val[b_faces[in_flow]] = 0
-#        bc_val[b_faces[out_flow]] = 1
-#    else:
-#        labels[:] = "dir"
-#        bc_val[b_faces] = (b_face_centers[0, :] < 0.5).astype(np.float)
+    if g.dim == 2:
+        labels[in_flow + out_flow] = "dir"
+        bc_val[b_faces[in_flow]] = 0
+        bc_val[b_faces[out_flow]] = 1
+    else:
+        labels[:] = "dir"
+        bc_val[b_faces] = (b_face_centers[0, :] < 0.5).astype(np.float)
 
     return labels, bc_val
 
@@ -34,7 +32,9 @@ def main():
 
     h = 0.125
     tol = 1e-6
-    time_step = 1e-1 # time step
+    end_time = 1
+    num_steps = 5
+    time_step = end_time / num_steps
     mesh_args = {"mesh_size_frac": h}
     domain = {"xmin": 0, "xmax": 1, "ymin": 0, "ymax": 2}
     folder = "case2"
@@ -57,9 +57,9 @@ def main():
         "domain": gb.bounding_box(as_dict=True),
         "tol": tol,
         "k": 1,
-        "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e8,
+        "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
         "mass_weight": 1.0/time_step, # inverse of the time step
-        "num_steps": 5,
+        "num_steps": num_steps,
         "L": 1,  # l-scheme constant
         "beta": 1,  # non-linearity constant
     }
@@ -71,11 +71,13 @@ def main():
     algo.set_data(param, bc_flag)
 
     # data for the problem
-    conv = 1e-4
+    conv = 1e-5
     max_iter = 100
 
     # solve the problem
-    algo.solve(conv, max_iter)
+    num_iter = algo.solve(conv, max_iter)
+
+    print(num_iter)
 
 if __name__ == "__main__":
     main()
