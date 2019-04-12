@@ -167,7 +167,6 @@ class Flow(object):
     def update_rhs(self):
 
         for g, d in self.gb:
-            param = {}
             unity = np.ones(g.num_cells)
 
             if g.dim == 1:
@@ -184,8 +183,7 @@ class Flow(object):
 
                 # update permeability tensor
                 perm = pp.SecondOrderTensor(1, kxx=kf, kyy=1, kzz=1)
-                param["second_order_tensor"] = perm
-                d[pp.PARAMETERS] = pp.Parameters(g, self.model, param)
+                d[pp.PARAMETERS].modify_parameters("flow", "second_order_tensor", perm)
 
         # get updated flux inner product matrix
         return self.matrix_rhs()
@@ -195,20 +193,18 @@ class Flow(object):
     def update_matrix(self):
 
         for g, d in self.gb:
-            param = {}
             unity = np.ones(g.num_cells)
 
             if g.dim == 1:
                 # non_linear and jacobian coefficient
-                kf_inv = 1.0 / self.data["kf_t"] + self.data["L"]
                 aperture = self.gb.node_props(g, pp.PARAMETERS)[self.model][
                     "aperture"]
+                kf_inv = 1.0 / (self.data["kf_t"] * aperture) + self.data["L"]
                 kf = (1.0 / kf_inv / aperture) * unity
 
                 # update permeability tensor
                 perm = pp.SecondOrderTensor(1, kxx=kf, kyy=1, kzz=1)
-                param["second_order_tensor"] = perm
-                d[pp.PARAMETERS] = pp.Parameters(g, self.model, param)
+                d[pp.PARAMETERS].modify_parameters("flow", "second_order_tensor", perm)
 
         # get updated flux inner product matrix
         return self.matrix_rhs()
