@@ -164,7 +164,7 @@ class Flow(object):
 
     # ------------------------------------------------------------------------------#
 
-    def update_rhs(self):
+    def update_rhs_MoLDD(self):
 
         for g, d in self.gb:
             unity = np.ones(g.num_cells)
@@ -190,7 +190,7 @@ class Flow(object):
 
     # ------------------------------------------------------------------------------#
 
-    def update_matrix(self):
+    def update_matrix_MoLDD(self):
 
         for g, d in self.gb:
             unity = np.ones(g.num_cells)
@@ -205,6 +205,76 @@ class Flow(object):
                 # update permeability tensor
                 perm = pp.SecondOrderTensor(1, kxx=kf, kyy=1, kzz=1)
                 d[pp.PARAMETERS].modify_parameters("flow", "second_order_tensor", perm)
+
+        # get updated flux inner product matrix
+        return self.matrix_rhs()
+
+    # ------------------------------------------------------------------------------#
+
+    def update_rhs_ItLDD(self):
+
+        for g, d in self.gb:
+            unity = np.ones(g.num_cells)
+
+            if g.dim == 1:
+                # P0-projected velocity field
+                P0u = d[self.P0_flux + "_old"]
+                norm_u = np.linalg.norm(P0u, axis=0)
+
+                # non_linear and jacobian coefficient
+                aperture = self.gb.node_props(g, pp.PARAMETERS)[self.model][
+                    "aperture"]
+                # assuming ksi(u) = beta * norm(u) * u
+                kf_inv = self.data["L"] - self.data["beta"] * norm_u
+                kf = (1.0 / kf_inv / aperture) * unity
+
+                # update permeability tensor
+                perm = pp.SecondOrderTensor(1, kxx=kf, kyy=1, kzz=1)
+                d[pp.PARAMETERS].modify_parameters("flow",
+                                                   "second_order_tensor",
+                                                   perm)
+                # update mass weight
+                # NOTE: only with L_p here; 1/t is outside the
+                # inner loop and multiscale basis part is in local class
+                # update function update_rhs()
+                weight = self.data["L_p"]
+                d[pp.PARAMETERS].modify_parameters("flow",
+                                                   "mass_weight",
+                                                   weight)
+
+        # get updated flux inner product matrix
+        return self.matrix_rhs()
+
+    # ------------------------------------------------------------------------------#
+
+    def update_matrix_ItLDD(self):
+
+        for g, d in self.gb:
+            unity = np.ones(g.num_cells)
+
+            if g.dim == 1:
+                # non_linear and jacobian coefficient
+                aperture = self.gb.node_props(g, pp.PARAMETERS)[self.model][
+                    "aperture"]
+                kf_inv = 1.0 / (self.data["kf_t"] * aperture) + self.data[
+                    "L"]
+                kf = (1.0 / kf_inv / aperture) * unity
+
+                # update permeability tensor
+                perm = pp.SecondOrderTensor(1, kxx=kf, kyy=1, kzz=1)
+                d[pp.PARAMETERS].modify_parameters("flow",
+                                                   "second_order_tensor",
+                                                   perm)
+
+                # update mass weight
+                # NOTE:this one requires 1/t part also, since the updated matrix
+                # is used in the inner solve;
+                # consider optimizing this (calculating same thing too many
+                # times)
+                weight = self.data["L_p"] + self.data["mass_weight"]
+                d[pp.PARAMETERS].modify_parameters("flow",
+                                                   "mass_weight",
+                                                   weight)
 
         # get updated flux inner product matrix
         return self.matrix_rhs()

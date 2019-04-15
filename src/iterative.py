@@ -5,7 +5,7 @@ import porepy as pp
 from flow_discretization import Flow
 from multiscale import Multiscale
 
-class MoLDD(object):
+class ItLDD(object):
 
     def __init__(self, gb, folder, tol):
         self.gb = gb
@@ -83,7 +83,7 @@ class MoLDD(object):
                 logger.info("done")
 
                 logger.info("Re-compute the matrices due to the non-linear term")
-                A = self.flow.update_matrix()[0]
+                A = self.flow.update_matrix_ItLDD()[0]
                 logger.info("done")
 
                 # assemble the problem in the lower dimensional problem
@@ -139,7 +139,7 @@ class MoLDD(object):
 
     def update_rhs(self):
         # first update the stiffness matrix (fracture permeability)
-        A, _, _, block_dof, full_dof = self.flow.update_rhs()
+        A, _, _, block_dof, full_dof = self.flow.update_rhs_ItLDD()
 
         # multiply A with fracture flux part of previous iteration vector
         x = np.zeros(A.shape[0])
@@ -152,13 +152,20 @@ class MoLDD(object):
                 # we are actually dealing with a grid
                 if g.dim == 1:
                     d = self.gb.graph.node[g]
-                    flux = d[self.flow.flux + "_old"]
                     # extract previous iteration flux to those dof
-                    # consider in the A matrix only the block relative to the Hdiv mass
-                    # matrix
-                    dof_u = np.arange(dof[bi], dof[bi + 1])[:g.num_faces]
+                    flux = d[self.flow.flux + "_old"]
+                    pressure = d[self.flow.pressure + "_old"]
+                    # local dof for this grid
+                    local_dof = np.arange(dof[bi], dof[bi + 1])
+                    # get separate flux and pressure dof
+                    dof_u = local_dof[:g.num_faces]
+                    dof_p = local_dof[g.num_faces:]
+                    # consider in the A matrix only the block relative to the
+                    # Hdiv mass matrix
                     x[dof_u] = A[np.ix_(dof_u, dof_u)].dot(flux)
+                    x[dof_p] = A[np.ix_(dof_p, dof_p)].dot(pressure)
 
+        # TODO: Add Schur complement part
         # return the extra term for the rhs with previous iteration vector
         return x
 
@@ -207,5 +214,3 @@ class MoLDD(object):
 
     # ------------------------------------------------------------------------------#
 
-
-#class ItLDD(object):
