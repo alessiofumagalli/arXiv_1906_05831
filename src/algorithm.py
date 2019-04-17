@@ -2,15 +2,14 @@ import numpy as np
 from logger import logger
 import porepy as pp
 
-from flow_discretization import Flow
 from multiscale import Multiscale
 
 class MoLDD(object):
 
-    def __init__(self, gb, folder, tol):
+    def __init__(self, gb, folder, flow, tol):
         self.gb = gb
         # declare the flow problem and the multiscale solver
-        self.flow = Flow(gb, folder, tol)
+        self.flow = flow(gb, folder, tol)
         self.ms = Multiscale(gb)
 
         self.num_steps = 0
@@ -50,7 +49,7 @@ class MoLDD(object):
         self.save_old_variables()
 
         # variable to save the number of iterations needed at each time step
-        num_iter = np.zeros(self.num_steps)
+        num_iter = np.zeros(self.num_steps, dtype=np.int)
 
         logger.info("Start the time loop with " + str(self.num_steps) + " steps")
         logger.add_tab()
@@ -86,7 +85,7 @@ class MoLDD(object):
                 A = self.flow.update_matrix()[0]
                 logger.info("done")
 
-                # assemble the problem in the lower dimensional problem
+                # assemble the problem in the lower dimensional domain
                 logger.info("Solve the lower dimensional problem")
                 x_l = self.ms.solve_low_dim(A, rhs)
                 logger.info("done")
