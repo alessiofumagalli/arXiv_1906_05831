@@ -3,76 +3,45 @@ import porepy as pp
 
 import sys; sys.path.insert(0, "../../src/")
 from algorithm import MoLDD
+from forchheimer import Forchheimer
 
-def bc_flag(g, data, tol):
-    b_faces = g.tags["domain_boundary_faces"].nonzero()[0]
-    b_face_centers = g.face_centers[:, b_faces]
+sys.path.insert(0, "../common/")
+import common
 
-    # define outflow type boundary conditions
-    out_flow = b_face_centers[1] > 2 - tol
-
-    # define inflow type boundary conditions
-    in_flow = b_face_centers[1] < 0 + tol
-
-    # define the labels and values for the boundary faces
-    labels = np.array(["neu"] * b_faces.size)
-    bc_val = np.zeros(g.num_faces)
-
-    if g.dim == 2:
-        labels[in_flow + out_flow] = "dir"
-        bc_val[b_faces[in_flow]] = 0
-        bc_val[b_faces[out_flow]] = 1
-    else:
-        labels[:] = "dir"
-        bc_val[b_faces] = (b_face_centers[0, :] < 0.5).astype(np.float)
-
-    return labels, bc_val
+# In this test case we validate the MoLDD scheme for the Forchheimer model
 
 def main():
 
-    h = 0.125
     tol = 1e-6
     end_time = 1
     num_steps = 5
     time_step = end_time / num_steps
-    mesh_args = {"mesh_size_frac": h}
-    domain = {"xmin": 0, "xmax": 1, "ymin": 0, "ymax": 2}
+
+    h = 0.125
     folder = "case2"
 
-    # Point coordinates, as a 2xn array
-    p = np.array([[0, 1], [1, 1]])
-
-    # Point connections as a 2 x num_frac arary
-    e = np.array([[0], [1]])
-
-    # Define a fracture network in 2d
-    network_2d = pp.FractureNetwork2d(p, e, domain)
-
-    # Generate a mixed-dimensional mesh
-    gb = network_2d.mesh(mesh_args)
-    #pp.plot_grid(gb, alpha=0, info="all")
+    gb = common.make_mesh(h)
 
     # the flow problem
     param = {
-        "domain": gb.bounding_box(as_dict=True),
         "tol": tol,
         "k": 1,
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
         "mass_weight": 1.0/time_step, # inverse of the time step
         "num_steps": num_steps,
-        "L": 1,  # l-scheme constant
-        "beta": 1,  # non-linearity constant
+        "L": 1e0,  # l-scheme constant
+        "beta": 1e2,  # non-linearity constant
     }
 
     # declare the algorithm
-    algo = MoLDD(gb, folder, tol)
+    algo = MoLDD(gb, folder, Forchheimer, tol)
 
     # set the data
-    algo.set_data(param, bc_flag)
+    algo.set_data(param, common.bc_flag)
 
     # data for the problem
     conv = 1e-5
-    max_iter = 100
+    max_iter = 1e3
 
     # solve the problem
     num_iter = algo.solve(conv, max_iter)
