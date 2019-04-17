@@ -82,7 +82,7 @@ class MoLDD(object):
                 logger.info("done")
 
                 logger.info("Re-compute the matrices due to the non-linear term")
-                A = self.flow.update_matrix()[0]
+                A = self.flow.update_matrix_MoLDD()[0]
                 logger.info("done")
 
                 # assemble the problem in the lower dimensional domain
@@ -138,7 +138,7 @@ class MoLDD(object):
 
     def update_rhs(self):
         # first update the stiffness matrix (fracture permeability)
-        A, _, _, block_dof, full_dof = self.flow.update_rhs()
+        A, _, _, block_dof, full_dof = self.flow.update_rhs_MoLDD()
 
         # multiply A with fracture flux part of previous iteration vector
         x = np.zeros(A.shape[0])

@@ -15,7 +15,7 @@ class Cross(Flow):
 
     # ------------------------------------------------------------------------------#
 
-    def update_rhs(self):
+    def update_rhs_MoLDD(self):
         # retrieve problem specific data
         beta = self.data["beta"]
         alpha = self.data["beta"]

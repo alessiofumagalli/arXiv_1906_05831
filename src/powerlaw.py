@@ -15,7 +15,7 @@ class PowerLaw(Flow):
 
     # ------------------------------------------------------------------------------#
 
-    def update_rhs(self):
+    def update_rhs_MoLDD(self):
         # retrieve problem specific data
         beta = self.data["beta"]
         r = self.data["r"]

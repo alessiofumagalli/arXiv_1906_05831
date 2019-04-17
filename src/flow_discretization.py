@@ -166,13 +166,13 @@ class Flow(object):
 
     # ------------------------------------------------------------------------------#
 
-    def update_rhs(self):
+    def update_rhs_MoLDD(self):
         # this is flow specific
         raise NotImplementedError
 
     # ------------------------------------------------------------------------------#
 
-    def update_matrix(self):
+    def update_matrix_MoLDD(self):
 
         for g, d in self.gb:
             unity = np.ones(g.num_cells)
