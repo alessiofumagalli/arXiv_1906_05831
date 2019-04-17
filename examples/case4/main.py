@@ -2,7 +2,7 @@ import numpy as np
 import porepy as pp
 
 import sys; sys.path.insert(0, "../../src/")
-from algorithm import MoLDD
+from monolithic import MoLDD
 from cross import Cross
 
 sys.path.insert(0, "../common/")
