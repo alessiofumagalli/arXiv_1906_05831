@@ -17,8 +17,8 @@ class Cross(Flow):
 
     def update_rhs_MoLDD(self):
         # retrieve problem specific data
-        beta = self.data["beta"]
-        alpha = self.data["beta"]
+        zeta = self.data["zeta"]
+        alpha = self.data["alpha"]
         r = self.data["r"]
 
         for g, d in self.gb:
@@ -29,7 +29,7 @@ class Cross(Flow):
 
                 # compute the non-linear term
                 pow_u = np.power(norm_u, 2 - r)
-                xi_u = np.divide(alpha, 1 + beta * pow_u)
+                xi_u = np.divide(alpha, 1 + zeta * pow_u)
 
                 # non_linear and jacobian coefficient
                 kf_inv = self.data["L"] - xi_u

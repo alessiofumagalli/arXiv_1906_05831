@@ -1,6 +1,9 @@
 import numpy as np
 import porepy as pp
 
+import sys; sys.path.insert(0, "../../src/")
+from monolithic import MoLDD
+
 # ------------------------------------------------------------------------------#
 
 def bc_flag(g, data, tol):
@@ -29,7 +32,7 @@ def bc_flag(g, data, tol):
 
 # ------------------------------------------------------------------------------#
 
-def make_mesh(h, plot=False):
+def make_mesh(mesh_size, plot=False):
 
     # define the domain
     domain = {"xmin": 0, "xmax": 1, "ymin": 0, "ymax": 2}
@@ -44,11 +47,28 @@ def make_mesh(h, plot=False):
     network_2d = pp.FractureNetwork2d(p, e, domain)
 
     # Generate a mixed-dimensional mesh
-    gb = network_2d.mesh({"mesh_size_frac": h})
+    gb = network_2d.mesh({"mesh_size_frac": mesh_size})
 
     if plot:
         pp.plot_grid(gb, alpha=0, info="all")
 
     return gb
+
+# ------------------------------------------------------------------------------#
+
+def solve_MoLDD(mesh_size, param, flow, conv=1e-5, max_iter=1e3):
+
+    # create the grid bucket
+    gb = make_mesh(mesh_size)
+
+    # declare the algorithm
+    folder = "solution"
+    algo = MoLDD(gb, folder, flow, param["tol"])
+
+    # set the data
+    algo.set_data(param, bc_flag)
+
+    # solve the problem
+    return algo.solve(conv, max_iter)
 
 # ------------------------------------------------------------------------------#
