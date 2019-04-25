@@ -45,3 +45,41 @@ class Cross(Flow):
         return self.matrix_rhs()
 
     # ------------------------------------------------------------------------------#
+
+    def update_rhs_ItLDD(self):
+        # retrieve problem specific data
+        zeta = self.data["zeta"]
+        alpha = self.data["alpha"]
+        r = self.data["r"]
+
+        for g, d in self.gb:
+            unity = np.ones(g.num_cells)
+
+            if g.dim == 1:
+                # P0-projected velocity field
+                P0u = d[self.P0_flux + "_old"]
+                norm_u = np.linalg.norm(P0u, axis=0)
+
+                # compute the non-linear term
+                pow_u = np.power(norm_u, 2 - r)
+                xi_u = np.divide(alpha, 1 + zeta * pow_u)
+
+                # non_linear and jacobian coefficient
+                kf_inv = self.data["L"] - xi_u
+
+                aperture = self.gb.node_props(g, pp.PARAMETERS)[self.model]["aperture"]
+                kf = (1.0 / kf_inv / aperture) * np.ones(g.num_cells)
+
+                # update permeability tensor
+                perm = pp.SecondOrderTensor(1, kxx=kf, kyy=1, kzz=1)
+                d[pp.PARAMETERS].modify_parameters("flow",
+                                                   "second_order_tensor",
+                                                   perm)
+                # update mass weight
+                weight = self.data["L_p"]
+                d[pp.PARAMETERS].modify_parameters("flow",
+                                                   "mass_weight",
+                                                   weight)
+
+        # get updated flux inner product matrix
+        return self.matrix_rhs()
