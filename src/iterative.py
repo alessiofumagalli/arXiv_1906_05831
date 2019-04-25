@@ -88,7 +88,7 @@ class ItLDD(object):
 
                 # assemble the problem in the lower dimensional problem
                 logger.info("Solve the lower dimensional problem")
-                x_l = self.ms.solve_low_dim(A, rhs)
+                x_l = self.ms.solve_low_dim(A, rhs, add_bases=False)
                 logger.info("done")
 
                 # distribute the variables to compute the error and to compute the
@@ -141,10 +141,13 @@ class ItLDD(object):
         # first update the stiffness matrix (fracture permeability)
         A, _, _, block_dof, full_dof = self.flow.update_rhs_ItLDD()
 
-        # multiply A with fracture flux part of previous iteration vector
+        # vector for multiplying A with fracture part of previous iteration vector
         x = np.zeros(A.shape[0])
+        # previous iteration fracture pressure vector for Schur complement contribution
+        y = np.zeros(A.shape[0])
         # count the dof for each block
         dof = np.cumsum(np.append(0, np.asarray(full_dof)))
+
         # find fracture flux dof
         for pair, bi in block_dof.items():
             g = pair[0]
@@ -165,9 +168,14 @@ class ItLDD(object):
                     x[dof_u] = A[np.ix_(dof_u, dof_u)].dot(flux)
                     x[dof_p] = A[np.ix_(dof_p, dof_p)].dot(pressure)
 
-        # TODO: Add Schur complement part
+                    # while in loop, make vector containing old 1d pressures; for Schur complement
+                    y[dof_p] = pressure
+
+        # Schur complement contribution
+        schur = self.ms.bases.dot(y[self.ms.dof_ln])
+
         # return the extra term for the rhs with previous iteration vector
-        return x
+        return x + schur
 
     # ------------------------------------------------------------------------------#
 

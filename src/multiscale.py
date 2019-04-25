@@ -131,7 +131,7 @@ class Multiscale(object):
 
     # ------------------------------------------------------------------------------#
 
-    def solve_low_dim(self, A, b):
+    def solve_low_dim(self, A, b, add_bases=True):
         # construct the problem in the fracture network
         A_l = np.empty((2, 2), dtype=np.object)
         b_l = np.empty(2, dtype=np.object)
@@ -139,7 +139,9 @@ class Multiscale(object):
         # the multiscale bases are thus inserted in the right block of the lower
         # dimensional problem
         A_l[0, 0] = self.block(A, self.dof_ln, self.dof_ln)
-        A_l[0, 0] += self.bases
+        # MoLDD - add bases to matrix, ItLDD - add bases to rhs
+        if add_bases:
+            A_l[0, 0] += self.bases
         # add to the right-hand side the non-homogeneous solution from the
         # higher dimensional problem
         b_l[0] = b[self.dof_ln] + self.x_h
