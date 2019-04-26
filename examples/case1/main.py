@@ -160,10 +160,10 @@ def main(solver):
 
 if __name__ == "__main__":
     # choose solving method: MoLDD or ItLDD
-    solver = "Mono"
-    # solver = "Iter"
+    # solver = "Mono"
+    solver = "Iter"
     #test_mesh_size(solver)
     #test_time_step(solver)
-    test_parameters(solver)
+    # test_parameters(solver)
     #test_L(solver)
-    #main(solver)
+    main(solver)

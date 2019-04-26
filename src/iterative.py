@@ -2,15 +2,14 @@ import numpy as np
 from logger import logger
 import porepy as pp
 
-from flow_discretization import Flow
 from multiscale import Multiscale
 
 class ItLDD(object):
 
-    def __init__(self, gb, folder, tol):
+    def __init__(self, gb, folder, flow, tol):
         self.gb = gb
         # declare the flow problem and the multiscale solver
-        self.flow = Flow(gb, folder, tol)
+        self.flow = flow(gb, folder, tol)
         self.ms = Multiscale(gb)
 
         self.num_steps = 0
@@ -172,7 +171,8 @@ class ItLDD(object):
                     y[dof_p] = pressure
 
         # Schur complement contribution
-        schur = self.ms.bases.dot(y[self.ms.dof_ln])
+        schur = np.zeros(A.shape[0])
+        schur[self.ms.dof_ln] = -self.ms.bases.dot(y[self.ms.dof_ln])
 
         # return the extra term for the rhs with previous iteration vector
         return x + schur
