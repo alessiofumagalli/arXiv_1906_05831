@@ -10,7 +10,7 @@ import common
 
 # ------------------------------------------------------------------------------#
 
-def test_mesh_size():
+def test_mesh_size(solver):
 
     end_time = 1
     num_steps = 5
@@ -34,14 +34,14 @@ def test_mesh_size():
     num_iter = np.empty((mesh_sizes.size, num_steps))
 
     for idx, mesh_size in enumerate(mesh_sizes):
-        # solve the MoLDD scheme
-        num_iter[idx, :]  = common.solve_MoLDD(mesh_size, param, Cross)
+        # solve with MoLDD xor ItLDD scheme
+        num_iter[idx, :]  = common.solve_(solver, mesh_size, param, Cross)
 
-    np.savetxt("cross_mesh_size.txt", num_iter, fmt="%d", delimiter=",")
+    np.savetxt("cross_mesh_size_" + solver + ".txt", num_iter, fmt="%d", delimiter=",")
 
 # ------------------------------------------------------------------------------#
 
-def test_time_step():
+def test_time_step(solver):
 
     mesh_size = 0.125
     end_time = 1
@@ -68,14 +68,14 @@ def test_time_step():
         param["mass_weight"] = 1.0/time_step
         param["num_steps"] = num_step
 
-        # solve the MoLDD scheme
-        num_iter[idx, :num_step] = common.solve_MoLDD(mesh_size, param, Cross)
+        # solve with MoLDD xor ItLDD scheme
+        num_iter[idx, :num_step] = common.solve_(solver, mesh_size, param, Cross)
 
-    np.savetxt("cross_time_step.txt", num_iter, fmt="%d", delimiter=",")
+    np.savetxt("cross_time_step_" + solver + ".txt", num_iter, fmt="%d", delimiter=",")
 
 # ------------------------------------------------------------------------------#
 
-def test_parameters():
+def test_parameters(solver):
 
     mesh_size = 0.125
 
@@ -102,10 +102,10 @@ def test_parameters():
         # consider the parameters
         param["alpha"] = alpha
 
-        # solve the MoLDD scheme
-        num_iter_alpha[idx, :] = common.solve_MoLDD(mesh_size, param, Cross)
+        # solve with MoLDD xor ItLDD scheme
+        num_iter_alpha[idx, :] = common.solve_(solver, mesh_size, param, Cross)
 
-    np.savetxt("cross_alpha_dependency.txt", num_iter_alpha, fmt="%d", delimiter=",")
+    np.savetxt("cross_alpha_dependency_" + solver + ".txt", num_iter_alpha, fmt="%d", delimiter=",")
 
     # change the value of zeta
     zetas = np.array([1, 10, 1e2])
@@ -116,10 +116,10 @@ def test_parameters():
         # consider the parameters
         param["zeta"] = zeta
 
-        # solve the MoLDD scheme
-        num_iter_zeta[idx, :] = common.solve_MoLDD(mesh_size, param, Cross)
+        # solve with MoLDD xor ItLDD scheme
+        num_iter_zeta[idx, :] = common.solve_(solver, mesh_size, param, Cross)
 
-    np.savetxt("cross_zeta_dependency.txt", num_iter_zeta, fmt="%d", delimiter=",")
+    np.savetxt("cross_zeta_dependency_" + solver + ".txt", num_iter_zeta, fmt="%d", delimiter=",")
 
     # change the value of r
     rs = np.array([1, 1.5, 4.5])
@@ -130,14 +130,14 @@ def test_parameters():
         # consider the parameters
         param["r"] = r
 
-        # solve the MoLDD scheme
-        num_iter_r[idx, :] = common.solve_MoLDD(mesh_size, param, Cross)
+        # solve with MoLDD xor ItLDD scheme
+        num_iter_r[idx, :] = common.solve_(solver, mesh_size, param, Cross)
 
-    np.savetxt("cross_r_dependency.txt", num_iter_r, fmt="%d", delimiter=",")
+    np.savetxt("cross_r_dependency_" + solver + ".txt", num_iter_r, fmt="%d", delimiter=",")
 
 # ------------------------------------------------------------------------------#
 
-def test_L():
+def test_L(solver):
     mesh_size = 0.125
 
     end_time = 1
@@ -161,14 +161,14 @@ def test_L():
     for idx, L in enumerate(Ls):
         param["L"] = L
 
-        # solve the MoLDD scheme
-        num_iter_L[idx, :] = common.solve_MoLDD(mesh_size, param, Cross)
+        # solve with MoLDD xor ItLDD scheme
+        num_iter_L[idx, :] = common.solve_(solver, mesh_size, param, Cross)
 
-    np.savetxt("cross_L_dependency.txt", num_iter_L, fmt="%d", delimiter=",")
+    np.savetxt("cross_L_dependency_" + solver + ".txt", num_iter_L, fmt="%d", delimiter=",")
 
 # ------------------------------------------------------------------------------#
 
-def main():
+def main(solver):
 
     mesh_size = 0.125
 
@@ -189,16 +189,19 @@ def main():
         "r": 1.5,
     }
 
-    # solve the MoLDD scheme
-    num_iter = common.solve_MoLDD(mesh_size, param, Cross)
+    # solve with MoLDD xor ItLDD scheme
+    num_iter = common.solve_(solver, mesh_size, param, Cross)
 
     print(num_iter)
 
 # ------------------------------------------------------------------------------#
 
 if __name__ == "__main__":
-    test_mesh_size()
-    test_time_step()
-    test_parameters()
-    test_L()
-    #main()
+    # choose solving method: MoLDD or ItLDD
+    solver = "Mono"
+    # solver = "Iter"
+    # test_mesh_size(solver)
+    # test_time_step(solver)
+    test_parameters(solver)
+    # test_L(solver)
+    # main(solver)

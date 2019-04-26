@@ -3,6 +3,7 @@ import porepy as pp
 
 import sys; sys.path.insert(0, "../../src/")
 from monolithic import MoLDD
+from iterative import ItLDD
 
 # ------------------------------------------------------------------------------#
 
@@ -56,14 +57,17 @@ def make_mesh(mesh_size, plot=False):
 
 # ------------------------------------------------------------------------------#
 
-def solve_MoLDD(mesh_size, param, flow, conv=1e-5, max_iter=1e3):
+def solve_(solver, mesh_size, param, flow, conv=1e-5, max_iter=1e3):
 
     # create the grid bucket
     gb = make_mesh(mesh_size)
 
     # declare the algorithm
     folder = "solution"
-    algo = MoLDD(gb, folder, flow, param["tol"])
+    if solver == "Iter":
+        algo = ItLDD(gb, folder, flow, param["tol"])
+    else:
+        algo = MoLDD(gb, folder, flow, param["tol"])
 
     # set the data
     algo.set_data(param, bc_flag)
@@ -72,3 +76,4 @@ def solve_MoLDD(mesh_size, param, flow, conv=1e-5, max_iter=1e3):
     return algo.solve(conv, max_iter)
 
 # ------------------------------------------------------------------------------#
+
