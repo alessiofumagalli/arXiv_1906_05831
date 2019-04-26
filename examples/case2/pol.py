@@ -9,7 +9,7 @@ file_name = "cross_L_dependency.txt"
 data = np.loadtxt(file_name, dtype=np.int, delimiter=",")
 
 num_steps = 5
-L = 0.1*np.arange(101)
+L = 0.025*np.arange(101)
 
 for step in np.arange(num_steps):
     plt.plot(L, data[:, step])
