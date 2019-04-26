@@ -185,7 +185,7 @@ class Flow(object):
 
                 # update permeability tensor
                 perm = pp.SecondOrderTensor(1, kxx=kf, kyy=1, kzz=1)
-                d[pp.PARAMETERS].modify_parameters("flow", "second_order_tensor", perm)
+                d[pp.PARAMETERS].modify_parameters("flow", ["second_order_tensor"], [perm])
 
         # get updated flux inner product matrix
         return self.matrix_rhs()
@@ -212,16 +212,16 @@ class Flow(object):
                 # update permeability tensor
                 perm = pp.SecondOrderTensor(1, kxx=kf, kyy=1, kzz=1)
                 d[pp.PARAMETERS].modify_parameters("flow",
-                                                   "second_order_tensor",
-                                                   perm)
+                                                   ["second_order_tensor"],
+                                                   [perm])
 
                 # update mass weight
                 # NOTE:this one requires 1/t part also, since the updated matrix
                 # is used in the inner solve;
                 weight = self.data["L_p"] + self.data["mass_weight"]
                 d[pp.PARAMETERS].modify_parameters("flow",
-                                                   "mass_weight",
-                                                   weight)
+                                                   ["mass_weight"],
+                                                   [weight])
 
         # get updated flux inner product matrix
         return self.matrix_rhs()
