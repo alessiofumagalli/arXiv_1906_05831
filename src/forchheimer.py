@@ -66,6 +66,7 @@ class Forchheimer(Flow):
                 d[pp.PARAMETERS].modify_parameters("flow", "second_order_tensor", perm)
 
                 # update mass weight
+                # NOTE: 1/t part is already added in the outer loop
                 weight = self.data["L_p"]
                 d[pp.PARAMETERS].modify_parameters("flow", "mass_weight", weight)
 

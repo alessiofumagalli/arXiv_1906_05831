@@ -148,7 +148,8 @@ def main(solver):
         "mass_weight": 1.0/time_step, # inverse of the time step
         "num_steps": num_steps,
         "L": 1e0,  # l-scheme constant
-        "beta": 1e2,  # non-linearity constant
+        "L_p": 0.5*1e3small, # inner l-scheme for iterative solver
+        "beta": 1e0,  # non-linearity constant
     }
 
     # solve with MoLDD xor ItLDD scheme

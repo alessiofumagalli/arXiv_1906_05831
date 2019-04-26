@@ -49,7 +49,7 @@ class ItLDD(object):
         self.save_old_variables()
 
         # variable to save the number of iterations needed at each time step
-        num_iter = np.zeros(self.num_steps)
+        num_iter = np.zeros(self.num_steps, dtype=np.int)
 
         logger.info("Start the time loop with " + str(self.num_steps) + " steps")
         logger.add_tab()
