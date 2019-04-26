@@ -117,10 +117,10 @@ def test_L():
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
         "mass_weight": 1.0/time_step, # inverse of the time step
         "num_steps": num_steps,
-        "beta": 1,
+        "beta": 50,
     }
 
-    Ls = 0.1*np.arange(101)
+    Ls = 0.025*np.arange(101)
     num_iter_L = np.empty((Ls.size, num_steps), dtype=np.int)
     for idx, L in enumerate(Ls):
         param["L"] = L

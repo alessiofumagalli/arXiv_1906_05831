@@ -156,7 +156,7 @@ def test_L():
         "r": 1.5,
     }
 
-    Ls = 0.1*np.arange(101)
+    Ls = 0.025*np.arange(101)
     num_iter_L = np.empty((Ls.size, num_steps), dtype=np.int)
     for idx, L in enumerate(Ls):
         param["L"] = L

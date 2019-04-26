@@ -92,7 +92,7 @@ def test_parameters():
     }
 
     # change the value of beta
-    betas = np.array([1e-1, 1, 2.5])
+    betas = np.array([1e-1, 1, 10])
     param["r"] = 2.3
     num_iter_beta = np.empty((betas.size, num_steps), dtype=np.int)
     for idx, beta in enumerate(betas):
@@ -105,7 +105,7 @@ def test_parameters():
     np.savetxt("powerlaw_beta_dependency.txt", num_iter_beta, fmt="%d", delimiter=",")
 
     # change the value of r
-    rs = np.array([1, 1.5, 4.5])
+    rs = np.array([4, 8, 16])
     param["beta"] = 1
     num_iter_r = np.empty((rs.size, num_steps), dtype=np.int)
     for idx, r in enumerate(rs):
@@ -137,7 +137,7 @@ def test_L():
         "r": 2.3,
     }
 
-    Ls = 0.1*np.arange(101)
+    Ls = 0.025*np.arange(101)
     num_iter_L = np.empty((Ls.size, num_steps), dtype=np.int)
     for idx, L in enumerate(Ls):
         param["L"] = L
