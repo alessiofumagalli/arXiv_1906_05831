@@ -21,9 +21,10 @@ def test_mesh_size(solver):
         "tol": 1e-6,
         "k": 1,
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
-        "mass_weight": 1.0/time_step, # inverse of the time step
+        "mass_weight": 1.0/time_step,  # inverse of the time step
         "num_steps": num_steps,
         "L": 1,  # l-scheme constant
+        "L_p": 1e3,  # inner l-scheme for iterative solver
         "beta": 1,
     }
 
@@ -50,6 +51,7 @@ def test_time_step(solver):
         "k": 1,
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
         "L": 1,  # l-scheme constant
+        "L_p": 1e3,  # inner l-scheme for iterative solver
         "beta": 1,
     }
 
@@ -84,8 +86,9 @@ def test_parameters(solver):
         "tol": 1e-6,
         "k": 1,
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
-        "mass_weight": 1.0/time_step, # inverse of the time step
+        "mass_weight": 1.0/time_step,  # inverse of the time step
         "num_steps": num_steps,
+        "L_p": 1e3,  # inner l-scheme for iterative solver
         "L": 1,  # l-scheme constant
     }
 
@@ -115,8 +118,9 @@ def test_L(solver):
         "tol": 1e-6,
         "k": 1,
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
-        "mass_weight": 1.0/time_step, # inverse of the time step
+        "mass_weight": 1.0/time_step,  # inverse of the time step
         "num_steps": num_steps,
+        "L_p": 1e3,  # inner l-scheme for iterative solver
         "beta": 50,
     }
 
@@ -145,10 +149,10 @@ def main(solver):
         "tol": 1e-6,
         "k": 1,
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
-        "mass_weight": 1.0/time_step, # inverse of the time step
+        "mass_weight": 1.0/time_step,  # inverse of the time step
         "num_steps": num_steps,
         "L": 1e0,  # l-scheme constant
-        "L_p": 0.5*1e3small, # inner l-scheme for iterative solver
+        "L_p": 1e3,  # inner l-scheme for iterative solver
         "beta": 1e0,  # non-linearity constant
     }
 
@@ -163,8 +167,8 @@ if __name__ == "__main__":
     # choose solving method: MoLDD or ItLDD
     # solver = "Mono"
     solver = "Iter"
-    #test_mesh_size(solver)
-    #test_time_step(solver)
-    # test_parameters(solver)
-    #test_L(solver)
+    test_mesh_size(solver)
+    test_time_step(solver)
+    test_parameters(solver)
+    # test_L(solver)
     main(solver)
