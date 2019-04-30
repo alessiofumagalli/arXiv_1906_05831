@@ -88,8 +88,9 @@ def test_parameters(solver):
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
         "mass_weight": 1.0/time_step,  # inverse of the time step
         "num_steps": num_steps,
-        "L_p": 1e3,  # inner l-scheme for iterative solver
         "L": 1,  # l-scheme constant
+        "L_p": 1e3,  # inner l-scheme for iterative solver
+
     }
 
     # change the value of beta
@@ -167,8 +168,8 @@ if __name__ == "__main__":
     # choose solving method: MoLDD or ItLDD
     # solver = "Mono"
     solver = "Iter"
-    test_mesh_size(solver)
+    # test_mesh_size(solver)
     # test_time_step(solver)
     # test_parameters(solver)
-    # test_L(solver)
-    main(solver)
+    test_L(solver)
+    # main(solver)

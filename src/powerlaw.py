@@ -70,7 +70,7 @@ class PowerLaw(Flow):
                                                    ["second_order_tensor"],
                                                    [perm])
                 # update mass weight
-                weight = self.data["L_p"]
+                weight = self.data["L_p"] * np.ones(g.num_cells)
                 d[pp.PARAMETERS].modify_parameters("flow",
                                                    ["mass_weight"],
                                                    [weight])

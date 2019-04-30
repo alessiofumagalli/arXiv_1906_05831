@@ -218,7 +218,7 @@ class Flow(object):
                 # update mass weight
                 # NOTE:this one requires 1/t part also, since the updated matrix
                 # is used in the inner solve;
-                weight = self.data["L_p"] + self.data["mass_weight"]
+                weight = (self.data["L_p"] + self.data["mass_weight"]) * unity
                 d[pp.PARAMETERS].modify_parameters("flow",
                                                    ["mass_weight"],
                                                    [weight])

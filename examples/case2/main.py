@@ -21,9 +21,10 @@ def test_mesh_size(solver):
         "tol": 1e-6,
         "k": 1,
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
-        "mass_weight": 1.0/time_step, # inverse of the time step
+        "mass_weight": 1.0/time_step,  # inverse of the time step
         "num_steps": num_steps,
         "L": 1,  # l-scheme constant
+        "L_p": 1e3,  # inner l-scheme for iterative solver
         "alpha": 1,
         "zeta": 1,  # non-linearity constant
         "r": 1.5,
@@ -35,7 +36,7 @@ def test_mesh_size(solver):
 
     for idx, mesh_size in enumerate(mesh_sizes):
         # solve with MoLDD xor ItLDD scheme
-        num_iter[idx, :]  = common.solve_(solver, mesh_size, param, Cross)
+        num_iter[idx, :] = common.solve_(solver, mesh_size, param, Cross)
 
     np.savetxt("cross_mesh_size_" + solver + ".txt", num_iter, fmt="%d", delimiter=",")
 
@@ -52,6 +53,7 @@ def test_time_step(solver):
         "k": 1,
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
         "L": 1,  # l-scheme constant
+        "L_p": 1e3,  # inner l-scheme for iterative solver
         "alpha": 1,
         "zeta": 1,  # non-linearity constant
         "r": 1.5,
@@ -88,9 +90,10 @@ def test_parameters(solver):
         "tol": 1e-6,
         "k": 1,
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
-        "mass_weight": 1.0/time_step, # inverse of the time step
+        "mass_weight": 1.0/time_step,  # inverse of the time step
         "num_steps": num_steps,
         "L": 1,  # l-scheme constant
+        "L_p": 1e3,  # inner l-scheme for iterative solver
     }
 
     # change the value of alpha
@@ -149,8 +152,9 @@ def test_L(solver):
         "tol": 1e-6,
         "k": 1,
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
-        "mass_weight": 1.0/time_step, # inverse of the time step
+        "mass_weight": 1.0/time_step,  # inverse of the time step
         "num_steps": num_steps,
+        "L_p": 1e3,  # inner l-scheme for iterative solver
         "alpha": 1,
         "zeta": 1,  # non-linearity constant
         "r": 1.5,
@@ -184,6 +188,7 @@ def main(solver):
         "mass_weight": 1.0/time_step, # inverse of the time step
         "num_steps": num_steps,
         "L": 1e2,  # l-scheme constant
+        "L_p": 1e3,  # inner l-scheme for iterative solver
         "alpha": 1,
         "zeta": 1,  # non-linearity constant
         "r": 1.5,
@@ -198,10 +203,10 @@ def main(solver):
 
 if __name__ == "__main__":
     # choose solving method: MoLDD or ItLDD
-    solver = "Mono"
-    # solver = "Iter"
-    # test_mesh_size(solver)
-    # test_time_step(solver)
-    test_parameters(solver)
+    # solver = "Mono"
+    solver = "Iter"
+    test_mesh_size(solver)
+    test_time_step(solver)
+    # test_parameters(solver)
     # test_L(solver)
     # main(solver)
