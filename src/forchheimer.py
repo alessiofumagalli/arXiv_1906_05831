@@ -35,7 +35,7 @@ class Forchheimer(Flow):
 
                 # update permeability tensor
                 perm = pp.SecondOrderTensor(1, kxx=kf, kyy=1, kzz=1)
-                d[pp.PARAMETERS].modify_parameters("flow", "second_order_tensor", perm)
+                d[pp.PARAMETERS].modify_parameters("flow", ["second_order_tensor"], [perm])
 
         # get updated flux inner product matrix
         return self.matrix_rhs()
@@ -63,12 +63,12 @@ class Forchheimer(Flow):
 
                 # update permeability tensor
                 perm = pp.SecondOrderTensor(1, kxx=kf, kyy=1, kzz=1)
-                d[pp.PARAMETERS].modify_parameters("flow", "second_order_tensor", perm)
+                d[pp.PARAMETERS].modify_parameters("flow", ["second_order_tensor"], [perm])
 
                 # update mass weight
                 # NOTE: 1/t part is already added in the outer loop
                 weight = self.data["L_p"]
-                d[pp.PARAMETERS].modify_parameters("flow", "mass_weight", weight)
+                d[pp.PARAMETERS].modify_parameters("flow", ["mass_weight"], [weight])
 
         # get updated flux inner product matrix
         return self.matrix_rhs()
