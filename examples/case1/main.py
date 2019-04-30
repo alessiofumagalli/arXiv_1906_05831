@@ -168,7 +168,7 @@ if __name__ == "__main__":
     # solver = "Mono"
     solver = "Iter"
     test_mesh_size(solver)
-    test_time_step(solver)
-    test_parameters(solver)
+    # test_time_step(solver)
+    # test_parameters(solver)
     # test_L(solver)
     main(solver)

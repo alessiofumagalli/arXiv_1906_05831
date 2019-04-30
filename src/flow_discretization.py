@@ -70,7 +70,7 @@ class Flow(object):
 
             param["second_order_tensor"] = perm
             param["aperture"] = aperture
-            param["mass_weight"] = data["mass_weight"]
+            param["mass_weight"] = data["mass_weight"] * unity
 
             param["source"] = g.cell_volumes * 0
 

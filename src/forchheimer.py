@@ -67,7 +67,7 @@ class Forchheimer(Flow):
 
                 # update mass weight
                 # NOTE: 1/t part is already added in the outer loop
-                weight = self.data["L_p"]
+                weight = self.data["L_p"] * np.ones(g.num_cells)
                 d[pp.PARAMETERS].modify_parameters("flow", ["mass_weight"], [weight])
 
         # get updated flux inner product matrix
