@@ -94,7 +94,7 @@ def test_parameters(solver):
     }
 
     # change the value of beta
-    betas = np.array([1e-1, 1, 1e2])
+    betas = np.array([1e-1, 1., 100.])
     num_iter_beta = np.empty((betas.size, num_steps), dtype=np.int)
     for idx, beta in enumerate(betas):
         # consider the parameters
@@ -137,12 +137,46 @@ def test_L(solver):
 
 # ------------------------------------------------------------------------------#
 
+def test_L_Lp(solver):
+    mesh_size = 0.125
+
+    end_time = 0.2
+    num_steps = 1
+    time_step = end_time / num_steps
+
+    # the flow problem
+    param = {
+        "tol": 1e-6,
+        "k": 1,
+        "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
+        "mass_weight": 1.0/time_step,  # inverse of the time step
+        "num_steps": num_steps,
+        "beta": 50,
+    }
+
+    Ls = 0.025*np.arange(101)
+    Lps = np.power(10, np.arange(2.2, 4.3, 0.2))
+
+    num_iter_L = np.empty((Ls.size, Lps.size), dtype=np.int)
+    for row, L in enumerate(Ls):
+        param["L"] = L
+
+        for col, Lp in enumerate(Lps):
+            param["L_p"] = Lp
+
+            # solve with MoLDD xor ItLDD scheme
+            num_iter_L[row, col] = common.solve_(solver, mesh_size, param, Forchheimer)
+
+    np.savetxt("forchheimer_L_Lp_dependency_" + solver + ".txt", num_iter_L, fmt="%d", delimiter=",")
+
+# ------------------------------------------------------------------------------#
+
 def main(solver):
 
     h = 0.125
 
-    end_time = 1
-    num_steps = 5
+    end_time = 0.2
+    num_steps = 1
     time_step = end_time / num_steps
 
     # the flow problem
@@ -153,7 +187,7 @@ def main(solver):
         "mass_weight": 1.0/time_step,  # inverse of the time step
         "num_steps": num_steps,
         "L": 1e0,  # l-scheme constant
-        "L_p": 1e3,  # inner l-scheme for iterative solver
+        "L_p": 0.158*1e3,  # inner l-scheme for iterative solver
         "beta": 1e0,  # non-linearity constant
     }
 
@@ -171,5 +205,6 @@ if __name__ == "__main__":
     # test_mesh_size(solver)
     # test_time_step(solver)
     # test_parameters(solver)
-    test_L(solver)
+    # test_L(solver)
+    test_L_Lp(solver)
     # main(solver)

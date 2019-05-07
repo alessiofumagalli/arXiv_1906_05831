@@ -95,7 +95,7 @@ def test_parameters(solver):
     }
 
     # change the value of beta
-    betas = np.array([1e-1, 1, 10])
+    betas = np.array([1e-1, 1., 10.])
     param["r"] = 2.3
     num_iter_beta = np.empty((betas.size, num_steps), dtype=np.int)
     for idx, beta in enumerate(betas):
@@ -107,9 +107,10 @@ def test_parameters(solver):
 
     np.savetxt("powerlaw_beta_dependency_" + solver + ".txt", num_iter_beta, fmt="%d", delimiter=",")
 
+    """
     # change the value of r
     rs = np.array([4, 8, 16])
-    param["beta"] = 1
+    param["beta"] = 1.
     num_iter_r = np.empty((rs.size, num_steps), dtype=np.int)
     for idx, r in enumerate(rs):
         # consider the parameters
@@ -119,7 +120,7 @@ def test_parameters(solver):
         num_iter_r[idx, :] = common.solve_(solver, mesh_size, param, PowerLaw)
 
     np.savetxt("powerlaw_r_dependency_" + solver + ".txt", num_iter_r, fmt="%d", delimiter=",")
-
+    """
 # ------------------------------------------------------------------------------#
 
 def test_L(solver):
@@ -185,8 +186,8 @@ if __name__ == "__main__":
     # choose solving method: MoLDD or ItLDD
     # solver = "Mono"
     solver = "Iter"
-    test_mesh_size(solver)
-    test_time_step(solver)
+    # test_mesh_size(solver)
+    # test_time_step(solver)
     # test_parameters(solver)
-    # test_L(solver)
+    test_L(solver)
     # main(solver)

@@ -12,7 +12,7 @@ num_steps = 5
 L = 0.025*np.arange(101)
 
 for step in np.arange(num_steps):
-    plt.plot(L, data[:, step])
+    plt.plot(L, data[:, step], 'r')
     plt.ylabel("$\sharp$")
     plt.xlabel("$L$")
     plt.grid(True)

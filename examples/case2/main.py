@@ -97,7 +97,7 @@ def test_parameters(solver):
     }
 
     # change the value of alpha
-    alphas = np.array([1e-1, 1, 2.5])
+    alphas = np.array([1e-1, 1., 2.5])
     param["zeta"] = 1
     param["r"] = 1.5
     num_iter_alpha = np.empty((alphas.size, num_steps), dtype=np.int)
@@ -110,8 +110,9 @@ def test_parameters(solver):
 
     np.savetxt("cross_alpha_dependency_" + solver + ".txt", num_iter_alpha, fmt="%d", delimiter=",")
 
+    """
     # change the value of zeta
-    zetas = np.array([1, 10, 1e2])
+    zetas = np.array([1., 10., 1e2])
     param["alpha"] = 1
     param["r"] = 1.5
     num_iter_zeta = np.empty((zetas.size, num_steps), dtype=np.int)
@@ -125,7 +126,7 @@ def test_parameters(solver):
     np.savetxt("cross_zeta_dependency_" + solver + ".txt", num_iter_zeta, fmt="%d", delimiter=",")
 
     # change the value of r
-    rs = np.array([1, 1.5, 4.5])
+    rs = np.array([1., 1.5, 4.5])
     param["alpha"] = 1
     param["zeta"] = 1
     num_iter_r = np.empty((rs.size, num_steps), dtype=np.int)
@@ -137,7 +138,7 @@ def test_parameters(solver):
         num_iter_r[idx, :] = common.solve_(solver, mesh_size, param, Cross)
 
     np.savetxt("cross_r_dependency_" + solver + ".txt", num_iter_r, fmt="%d", delimiter=",")
-
+    """
 # ------------------------------------------------------------------------------#
 
 def test_L(solver):
@@ -205,8 +206,8 @@ if __name__ == "__main__":
     # choose solving method: MoLDD or ItLDD
     # solver = "Mono"
     solver = "Iter"
-    test_mesh_size(solver)
-    test_time_step(solver)
+    # test_mesh_size(solver)
+    # test_time_step(solver)
     # test_parameters(solver)
-    # test_L(solver)
+    test_L(solver)
     # main(solver)
