@@ -187,7 +187,7 @@ def main(solver):
         "mass_weight": 1.0/time_step,  # inverse of the time step
         "num_steps": num_steps,
         "L": 0.25,  # l-scheme constant
-        "L_p": np.power(10, 3),  # inner l-scheme for iterative solver
+        "L_p": 1e3,  # inner l-scheme for iterative solver
         "beta": 1e0,  # non-linearity constant
     }
 

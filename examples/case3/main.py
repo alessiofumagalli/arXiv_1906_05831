@@ -154,6 +154,42 @@ def test_L(solver):
 
 # ------------------------------------------------------------------------------#
 
+def test_L_Lp(solver):
+    mesh_size = 0.125
+
+    end_time = 0.2
+    num_steps = 1
+    time_step = end_time / num_steps
+
+    # the flow problem
+    param = {
+        "tol": 1e-6,
+        "k": 1,
+        "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
+        "mass_weight": 1.0 / time_step,  # inverse of the time step
+        "num_steps": num_steps,
+        "beta": 1,
+        "r": 2.3,
+    }
+
+    Ls = 0.25*np.arange(11)
+    Lps = np.power(10, np.arange(2.2, 4.3, 0.2))
+
+    num_iter_L = np.empty((Ls.size, Lps.size), dtype=np.int)
+    for row, L in enumerate(Ls):
+        param["L"] = L
+
+        for col, Lp in enumerate(Lps):
+            param["L_p"] = Lp
+
+            # solve with MoLDD xor ItLDD scheme
+            num_iter_L[row, col] = common.solve_(solver, mesh_size, param, PowerLaw)
+
+    np.savetxt("powerlaw_L_Lp_dependency_" + solver + ".txt", num_iter_L, fmt="%d", delimiter=",")
+
+# ------------------------------------------------------------------------------#
+
+
 def main(solver):
 
     h = 0.125
@@ -189,5 +225,6 @@ if __name__ == "__main__":
     # test_mesh_size(solver)
     # test_time_step(solver)
     # test_parameters(solver)
-    test_L(solver)
+    # test_L(solver)
+    test_L_Lp(solver)
     # main(solver)
