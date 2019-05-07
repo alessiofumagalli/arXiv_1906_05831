@@ -25,6 +25,9 @@ class ItLDD(object):
 
     def solve(self, conv, max_iter):
 
+        # Print parameters
+        logger.info("L = " + str(self.flow.data["L"]) + "\t" + "L_p = " + str(self.flow.data["L_p"]) )
+
         # create the matrix for the Darcy problem
         logger.info("Create the matrices and rhs for the problem")
         A, M, b, block_dof, full_dof = self.flow.matrix_rhs()
@@ -100,6 +103,12 @@ class ItLDD(object):
                 err = self.compute_error()
                 logger.info("done, error " + str(err))
 
+                # check divergence
+                if np.any(err > 1e5):
+                    logger.info("Divergence detected. Breaking the inner loop in time step " + str(n))
+                    i = -1
+                    break
+
                 # save the variable with "_old" suffix
                 self.save_old_variables()
 
@@ -124,10 +133,10 @@ class ItLDD(object):
             self.save_old_variables()
 
             # solve the problem
-            self.flow.export(time_step=n)
+            # self.flow.export(time_step=n)
 
         # save the pvd
-        self.flow.export_pvd(np.arange(self.num_steps))
+        # self.flow.export_pvd(np.arange(self.num_steps))
 
         logger.remove_tab()
         logger.info("done")

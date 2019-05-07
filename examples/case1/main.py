@@ -154,7 +154,7 @@ def test_L_Lp(solver):
         "beta": 50,
     }
 
-    Ls = 0.025*np.arange(101)
+    Ls = 0.25*np.arange(11)
     Lps = np.power(10, np.arange(2.2, 4.3, 0.2))
 
     num_iter_L = np.empty((Ls.size, Lps.size), dtype=np.int)
@@ -186,8 +186,8 @@ def main(solver):
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
         "mass_weight": 1.0/time_step,  # inverse of the time step
         "num_steps": num_steps,
-        "L": 1e0,  # l-scheme constant
-        "L_p": 0.158*1e3,  # inner l-scheme for iterative solver
+        "L": 0.25,  # l-scheme constant
+        "L_p": np.power(10, 3),  # inner l-scheme for iterative solver
         "beta": 1e0,  # non-linearity constant
     }
 
