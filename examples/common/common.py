@@ -41,7 +41,7 @@ def make_mesh(mesh_size, plot=False):
     # Point coordinates, as a 2xn array
     p = np.array([[0, 1], [1, 1]])
 
-    # Point connections as a 2 x num_frac arary
+    # Point connections as a 2 x num_frac array
     e = np.array([[0], [1]])
 
     # Define a fracture network in 2d
@@ -57,7 +57,7 @@ def make_mesh(mesh_size, plot=False):
 
 # ------------------------------------------------------------------------------#
 
-def solve_(solver, mesh_size, param, flow, conv=1e-5, max_iter=1e3):
+def solve_(solver, mesh_size, param, flow, conv=1e-5, max_iter=200):
 
     # create the grid bucket
     gb = make_mesh(mesh_size)

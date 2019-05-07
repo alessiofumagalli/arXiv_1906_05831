@@ -70,10 +70,11 @@ class ItLDD(object):
 
             i = 0
             err = np.inf
+            err_old = np.inf
             logger.info("Start the non-linear loop with convergence " + str(conv) + " and " \
                         + str(max_iter) + "max iterations")
             logger.add_tab()
-            while np.any(err > conv) and i < max_iter:
+            while np.any(err > conv):
                 logger.info("Perform iteration number " + str(i))
 
                 # NOTE: we need to recompute only the lower dimensional matrices
@@ -101,13 +102,21 @@ class ItLDD(object):
 
                 # compute the error to stop the non-linear loop
                 err = self.compute_error()
-                logger.info("done, error " + str(err))
 
                 # check divergence
-                if np.any(err > 1e5):
+                if np.any(err > 1e3):
                     logger.info("Divergence detected. Breaking the inner loop in time step " + str(n))
+                    logger.info("Last two errors: " + str(err) + "\t" + str(err_old))
                     i = -1
                     break
+                if i > max_iter:
+                    logger.info("Exceeded " + str(max_iter) + " iterations. Breaking the inner loop in time step" + str(n))
+                    logger.info("Last two errors: " + str(err) + "\t" + str(err_old))
+                    break
+
+                # copy last error
+                logger.info("done, error " + str(err))
+                err_old = err.copy()
 
                 # save the variable with "_old" suffix
                 self.save_old_variables()
