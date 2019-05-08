@@ -5,14 +5,14 @@ plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 plt.rc('font', size=15)
 
-file_name = "forchheimer_L_dependency.txt"
+file_name = "forchheimer_L_dependency_Iter.txt"
 data = np.loadtxt(file_name, dtype=np.int, delimiter=",")
 
 num_steps = 5
 L = 0.025*np.arange(101)
 
 for step in np.arange(num_steps):
-    plt.plot(L, data[:, step], 'r')
+    plt.plot(L, data[:, step])
     plt.ylabel("$\sharp$")
     plt.xlabel("$L$")
     plt.grid(True)
