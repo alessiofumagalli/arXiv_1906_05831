@@ -157,8 +157,8 @@ def test_L(solver):
 def test_L_Lp(solver):
     mesh_size = 0.125
 
-    end_time = 0.2
-    num_steps = 1
+    end_time = 1
+    num_steps = 5
     time_step = end_time / num_steps
 
     # the flow problem
@@ -172,10 +172,10 @@ def test_L_Lp(solver):
         "r": 2.3,
     }
 
-    Ls = 0.25*np.arange(11)
-    Lps = np.power(10, np.arange(2.2, 4.3, 0.2))
+    Ls = np.linspace(0, 2)  # 50 points (including endpoint)
+    Lps = np.power(10, np.arange(2.2, 4.3, 0.1))  # 20 points (up to 4.2)
 
-    num_iter_L = np.empty((Ls.size, Lps.size), dtype=np.int)
+    num_iter_L = [np.empty((Ls.size, Lps.size), dtype=np.int)] * num_steps
     for row, L in enumerate(Ls):
         param["L"] = L
 
@@ -183,9 +183,12 @@ def test_L_Lp(solver):
             param["L_p"] = Lp
 
             # solve with MoLDD xor ItLDD scheme
-            num_iter_L[row, col] = common.solve_(solver, mesh_size, param, PowerLaw)
+            iters = common.solve_(solver, mesh_size, param, PowerLaw)
+            for t in range(num_steps):
+                num_iter_L[t][row, col] = iters[t]
 
-    np.savetxt("powerlaw_L_Lp_dependency_" + solver + ".txt", num_iter_L, fmt="%d", delimiter=",")
+    for t in range(num_steps):
+        np.savetxt("powerlaw_L_Lp_" + solver + "_" + str(t + 1) + ".txt", num_iter_L[t], fmt="%d", delimiter=",")
 
 # ------------------------------------------------------------------------------#
 
