@@ -25,7 +25,7 @@ def test_mesh_size(solver):
         "num_steps": num_steps,
         "L": 1,  # l-scheme constant
         "L_p": 1e3,  # inner l-scheme for iterative solver
-        "alpha": 1,
+        "omega": 1,
         "zeta": 1,  # non-linearity constant
         "r": 1.5,
     }
@@ -54,7 +54,7 @@ def test_time_step(solver):
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
         "L": 1,  # l-scheme constant
         "L_p": 1e3,  # inner l-scheme for iterative solver
-        "alpha": 1,
+        "omega": 1,
         "zeta": 1,  # non-linearity constant
         "r": 1.5,
     }
@@ -96,24 +96,24 @@ def test_parameters(solver):
         "L_p": 1e3,  # inner l-scheme for iterative solver
     }
 
-    # change the value of alpha
-    alphas = np.array([1e-1, 1., 2.5])
+    # change the value of omega
+    omegas = np.array([1e-1, 1., 2.5])
     param["zeta"] = 1
     param["r"] = 1.5
-    num_iter_alpha = np.empty((alphas.size, num_steps), dtype=np.int)
-    for idx, alpha in enumerate(alphas):
+    num_iter_omega = np.empty((omegas.size, num_steps), dtype=np.int)
+    for idx, omega in enumerate(omegas):
         # consider the parameters
-        param["alpha"] = alpha
+        param["omega"] = omega
 
         # solve with MoLDD xor ItLDD scheme
-        num_iter_alpha[idx, :] = common.solve_(solver, mesh_size, param, Cross)
+        num_iter_omega[idx, :] = common.solve_(solver, mesh_size, param, Cross)
 
-    np.savetxt("cross_alpha_dependency_" + solver + ".txt", num_iter_alpha, fmt="%d", delimiter=",")
+    np.savetxt("cross_omega_dependency_" + solver + ".txt", num_iter_omega, fmt="%d", delimiter=",")
 
 
     # change the value of zeta
     zetas = np.array([1., 10., 1e2])
-    param["alpha"] = 1
+    param["omega"] = 1
     param["r"] = 1.5
     num_iter_zeta = np.empty((zetas.size, num_steps), dtype=np.int)
     for idx, zeta in enumerate(zetas):
@@ -127,7 +127,7 @@ def test_parameters(solver):
 
     # change the value of r
     rs = np.array([1., 1.5, 4.5])
-    param["alpha"] = 1
+    param["omega"] = 1
     param["zeta"] = 1
     num_iter_r = np.empty((rs.size, num_steps), dtype=np.int)
     for idx, r in enumerate(rs):
@@ -156,7 +156,7 @@ def test_L(solver):
         "mass_weight": 1.0/time_step,  # inverse of the time step
         "num_steps": num_steps,
         "L_p": 1e3,  # inner l-scheme for iterative solver
-        "alpha": 1,
+        "omega": 1,
         "zeta": 1,  # non-linearity constant
         "r": 1.5,
     }
@@ -170,6 +170,39 @@ def test_L(solver):
         num_iter_L[idx, :] = common.solve_(solver, mesh_size, param, Cross)
 
     np.savetxt("cross_L_dependency_" + solver + ".txt", num_iter_L, fmt="%d", delimiter=",")
+
+# ------------------------------------------------------------------------------#
+
+def test_alpha(solver):
+    mesh_size = 0.125
+
+    end_time = 1
+    num_steps = 5
+    time_step = end_time / num_steps
+
+    # the flow problem
+    param = {
+        "tol": 1e-6,
+        "k": 1,
+        "aperture": 1e-2, "kf_t": 1e2,
+        "mass_weight": 1.0/time_step,  # inverse of the time step
+        "num_steps": num_steps,
+        "L": 1,
+        "L_p": 1e3,  # inner l-scheme for iterative solver
+        "omega": 1,
+        "zeta": 1,
+        "r": 1.5,
+    }
+
+    alphas = np.array([1e0, 1e1, 1e2, 1e3])
+    num_iter_alpha = np.empty((alphas.size, num_steps), dtype=np.int)
+    for idx, alpha in enumerate(alphas):
+        param["kf_n"] = alpha
+        # solve with MoLDD xor ItLDD scheme
+        num_iter_alpha[idx, :] = common.solve_(solver, mesh_size, param, Cross)
+
+    np.savetxt("cross_alpha_dependency_" + solver + ".txt", num_iter_alpha, fmt="%d", delimiter=",")
+
 
 # ------------------------------------------------------------------------------#
 
@@ -187,7 +220,7 @@ def test_L_Lp(solver):
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
         "mass_weight": 1.0 / time_step,  # inverse of the time step
         "num_steps": num_steps,
-        "alpha": 1,
+        "omega": 1,
         "zeta": 1,  # non-linearity constant
         "r": 1.5,
     }
@@ -213,9 +246,41 @@ def test_L_Lp(solver):
 
 # ------------------------------------------------------------------------------#
 
+def test_mortar(solver):
+    mesh_size = 0.125/4
+
+    end_time = 1
+    num_steps = 5
+    time_step = end_time / num_steps
+
+    # the flow problem
+    param = {
+        "tol": 1e-6,
+        "k": 1,
+        "aperture": 1e-2, "kf_t": 1e-2, "kf_n": 1e-2,
+        "mass_weight": 1.0/time_step,  # inverse of the time step
+        "num_steps": num_steps,
+        "L": 2,
+        "L_p": 200,  # inner l-scheme for iterative solver
+        "omega": 1,
+        "zeta": 1,
+        "r": 1.5,
+    }
+
+    mortar_sizes = np.array([0.25, 0.5, 1, 2, 4])
+    num_iter_mortar_size = np.empty((mortar_sizes.size, num_steps), dtype=np.int)
+    for idx, mortar_size in enumerate(mortar_sizes):
+        param["mortar_size"] = mortar_size
+        # solve with MoLDD xor ItLDD scheme
+        num_iter_mortar_size[idx, :] = common.solve_(solver, mesh_size, param, Cross)
+
+    np.savetxt("cross_mortar_size_dependency_" + solver + ".txt", num_iter_mortar_size, fmt="%d", delimiter=",")
+
+# ------------------------------------------------------------------------------#
+
 def main(solver):
 
-    mesh_size = 0.125
+    mesh_size = 0.125/4
 
     end_time = 1
     num_steps = 5
@@ -228,9 +293,9 @@ def main(solver):
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
         "mass_weight": 1.0/time_step, # inverse of the time step
         "num_steps": num_steps,
-        "L": 1e2,  # l-scheme constant
+        "L": 1,  # l-scheme constant
         "L_p": 1e3,  # inner l-scheme for iterative solver
-        "alpha": 1,
+        "omega": 1,
         "zeta": 1,  # non-linearity constant
         "r": 1.5,
     }
@@ -244,11 +309,14 @@ def main(solver):
 
 if __name__ == "__main__":
     # choose solving method: MoLDD or ItLDD
-    # solver = "Mono"
-    solver = "Iter"
-    # test_mesh_size(solver)
-    # test_time_step(solver)
-    # test_parameters(solver)
-    # test_L(solver)
-    test_L_Lp(solver)
-    # main(solver)
+    for solver in ["Mono", "Iter"]:
+        #test_mesh_size(solver)
+        test_time_step(solver)
+        test_parameters(solver)
+        test_L(solver)
+        test_alpha(solver)
+        test_mortar(solver)
+
+        main(solver)
+
+    test_L_Lp("Iter")

@@ -137,6 +137,37 @@ def test_L(solver):
 
 # ------------------------------------------------------------------------------#
 
+def test_alpha(solver):
+    mesh_size = 0.125
+
+    end_time = 1
+    num_steps = 5
+    time_step = end_time / num_steps
+
+    # the flow problem
+    param = {
+        "tol": 1e-6,
+        "k": 1,
+        "aperture": 1e-2, "kf_t": 1e2,
+        "mass_weight": 1.0/time_step,  # inverse of the time step
+        "num_steps": num_steps,
+        "L": 1,
+        "L_p": 1e3,  # inner l-scheme for iterative solver
+        "beta": 1,
+    }
+
+    alphas = np.array([1e0, 1e1, 1e2, 1e3])
+    num_iter_alpha = np.empty((alphas.size, num_steps), dtype=np.int)
+    for idx, alpha in enumerate(alphas):
+        param["kf_n"] = alpha
+        # solve with MoLDD xor ItLDD scheme
+        num_iter_alpha[idx, :] = common.solve_(solver, mesh_size, param, Forchheimer)
+
+    np.savetxt("forchheimer_alpha_dependency_" + solver + ".txt", num_iter_alpha, fmt="%d", delimiter=",")
+
+
+# ------------------------------------------------------------------------------#
+
 def test_L_Lp(solver):
     mesh_size = 0.125
 
@@ -174,12 +205,43 @@ def test_L_Lp(solver):
 
 # ------------------------------------------------------------------------------#
 
+def test_mortar(solver):
+    mesh_size = 0.125/4
+
+    end_time = 1
+    num_steps = 5
+    time_step = end_time / num_steps
+
+    # the flow problem
+    param = {
+        "tol": 1e-6,
+        "k": 1,
+        "aperture": 1e-2, "kf_t": 1e-2, "kf_n": 1e-2,
+        "mass_weight": 1.0/time_step,  # inverse of the time step
+        "num_steps": num_steps,
+        "L": 1,
+        "L_p": 200,  # inner l-scheme for iterative solver
+        "beta": 1,
+    }
+
+    mortar_sizes = np.array([0.25, 0.5, 1, 2, 4])
+    num_iter_mortar_size = np.empty((mortar_sizes.size, num_steps), dtype=np.int)
+    for idx, mortar_size in enumerate(mortar_sizes):
+        param["mortar_size"] = mortar_size
+        # solve with MoLDD xor ItLDD scheme
+        num_iter_mortar_size[idx, :] = common.solve_(solver, mesh_size, param, Forchheimer)
+
+    np.savetxt("forchheimer_mortar_size_dependency_" + solver + ".txt", num_iter_mortar_size, fmt="%d", delimiter=",")
+
+
+# ------------------------------------------------------------------------------#
+
 def main(solver):
 
-    h = 0.125
+    h = 0.125/4
 
-    end_time = 0.2
-    num_steps = 1
+    end_time = 1
+    num_steps = 5
     time_step = end_time / num_steps
 
     # the flow problem
@@ -189,9 +251,9 @@ def main(solver):
         "aperture": 1e-2, "kf_t": 1e2, "kf_n": 1e2,
         "mass_weight": 1.0/time_step,  # inverse of the time step
         "num_steps": num_steps,
-        "L": 0.25,  # l-scheme constant
+        "L": 1,  # l-scheme constant
         "L_p": 1e3,  # inner l-scheme for iterative solver
-        "beta": 1e0,  # non-linearity constant
+        "beta": 1e2,  # non-linearity constant
     }
 
     # solve with MoLDD xor ItLDD scheme
@@ -203,11 +265,14 @@ def main(solver):
 
 if __name__ == "__main__":
     # choose solving method: MoLDD or ItLDD
-    # solver = "Mono"
-    solver = "Iter"
-    # test_mesh_size(solver)
-    # test_time_step(solver)
-    # test_parameters(solver)
-    # test_L(solver)
-    test_L_Lp(solver)
-    # main(solver)
+    for solver in ["Mono", "Iter"]:
+        test_mesh_size(solver)
+        test_time_step(solver)
+        test_parameters(solver)
+        test_L(solver)
+        test_alpha(solver)
+        test_mortar(solver)
+
+        main(solver)
+
+    test_L_Lp("Iter")
