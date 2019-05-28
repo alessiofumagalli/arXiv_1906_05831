@@ -6,7 +6,7 @@ from flow_discretization import Flow
 # We consider the following generalised Darcy flow in the fractures
 # \xi(u) + K^{-1} u + \nabla p = 0
 # Where \xi follows the Cross model doi.org/10.1016/0095-8522(65)90022-X
-# with \xi(u) = ( \alpha u ) / ( 1 + \beta |u|^{2-r} )
+# with \xi(u) = ( \omega u ) / ( 1 + \beta |u|^{2-r} )
 # For shear thinning fluids 1 < r < 2
 
 class Cross(Flow):
@@ -18,7 +18,7 @@ class Cross(Flow):
     def update_rhs_MoLDD(self):
         # retrieve problem specific data
         zeta = self.data["zeta"]
-        alpha = self.data["alpha"]
+        omega = self.data["omega"]
         r = self.data["r"]
 
         for g, d in self.gb:
@@ -29,7 +29,7 @@ class Cross(Flow):
 
                 # compute the non-linear term
                 pow_u = np.power(norm_u, 2 - r)
-                xi_u = np.divide(alpha, 1 + zeta * pow_u)
+                xi_u = np.divide(omega, 1 + zeta * pow_u)
 
                 # non_linear and jacobian coefficient
                 kf_inv = self.data["L"] - xi_u
@@ -49,7 +49,7 @@ class Cross(Flow):
     def update_rhs_ItLDD(self):
         # retrieve problem specific data
         zeta = self.data["zeta"]
-        alpha = self.data["alpha"]
+        omega = self.data["omega"]
         r = self.data["r"]
 
         for g, d in self.gb:
@@ -62,7 +62,7 @@ class Cross(Flow):
 
                 # compute the non-linear term
                 pow_u = np.power(norm_u, 2 - r)
-                xi_u = np.divide(alpha, 1 + zeta * pow_u)
+                xi_u = np.divide(omega, 1 + zeta * pow_u)
 
                 # non_linear and jacobian coefficient
                 kf_inv = self.data["L"] - xi_u
