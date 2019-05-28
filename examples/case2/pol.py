@@ -14,7 +14,7 @@ L = 0.025*np.arange(101)
 for step in np.arange(num_steps):
     plt.plot(L, data[:, step])
     plt.ylabel("$\sharp$")
-    plt.xlabel("$L$")
+    plt.xlabel("$L_{\gamma, u}$")
     plt.grid(True)
     file_name = "cross_" + str(step) + ".pdf"
     plt.savefig(file_name, bbox_inches='tight')
