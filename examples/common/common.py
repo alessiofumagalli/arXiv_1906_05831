@@ -62,6 +62,17 @@ def solve_(solver, mesh_size, param, flow, conv=1e-5, max_iter=200):
     # create the grid bucket
     gb = make_mesh(mesh_size)
 
+    # in case of the mortar
+    if param.get("mortar_size", None):
+        g_map = {}
+        for g, _ in gb:
+            if g.dim == 1:
+                num_nodes = int(g.num_nodes * param["mortar_size"])
+                g_map[g] = pp.refinement.remesh_1d(g, num_nodes)
+
+        gb = pp.mortars.replace_grids_in_bucket(gb, g_map, {}, param["tol"])
+        gb.assign_node_ordering()
+
     # declare the algorithm
     folder = "solution"
     if solver == "Iter":
