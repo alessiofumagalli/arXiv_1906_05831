@@ -23,8 +23,8 @@ for i in range(num_steps):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    ax.set_xlabel("$L$")
-    ax.set_ylabel("$log(L_p)$")
+    ax.set_xlabel("$L_{\gamma, u}$")
+    ax.set_ylabel("$log(L_{\gamma, p})$")
     ax.set_zlabel("$\sharp$")
 
     # import pdb; pdb.set_trace()
