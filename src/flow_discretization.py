@@ -15,6 +15,7 @@ class Flow(object):
         self.model = "flow"
         self.gb = gb
         self.data = None
+        self.assembler = None
 
         # discretization operator name
         self.discr_name = "flux"
@@ -133,11 +134,10 @@ class Flow(object):
             d[pp.DISCRETIZATION_MATRICES] = {self.model: {}}
 
         # solution of the darcy problem
-        assembler = pp.Assembler()
+        self.assembler = pp.Assembler(self.gb, active_variables=[self.variable, self.mortar])
 
         logger.info("Assemble the flow problem")
-        block_A, block_b, block_dof, full_dof = assembler.assemble_matrix_rhs(self.gb,
-            active_variables=[self.variable, self.mortar], add_matrices=False)
+        block_A, block_b = self.assembler.assemble_matrix_rhs(add_matrices=False)
 
         # unpack the matrices just computed
         coupling_name = self.coupling_name + (
@@ -152,7 +152,7 @@ class Flow(object):
         A = M + block_A[discr_name] + block_A[coupling_name]
         b = block_b[discr_name] + block_b[coupling_name] + block_b[source_name]
 
-        return A, M, b, block_dof, full_dof
+        return A, M, b, self.assembler.block_dof, self.assembler.full_dof
 
     # ------------------------------------------------------------------------------#
 
@@ -231,8 +231,7 @@ class Flow(object):
     def extract(self, x, block_dof, full_dof):
 
         logger.info("Variable post-process")
-        assembler = pp.Assembler()
-        assembler.distribute_variable(self.gb, x, block_dof, full_dof)
+        self.assembler.distribute_variable(x)
         for g, d in self.gb:
             d[self.pressure] = self.discr.extract_pressure(g, d[self.variable], d)
             d[self.flux] = self.discr.extract_flux(g, d[self.variable], d)
