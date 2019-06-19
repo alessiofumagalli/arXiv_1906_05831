@@ -1,6 +1,6 @@
 # Robust linear domain decomposition schemes for reduced non-linear fracture flow models
 Source code and examples for the paper<br>
-"*Robust linear domain decomposition schemes for reduced non-linear fracture flow models*" by Elyes Ahmed, Alessio Fumagalli, Ana Budiša, Eirik Keilegavlen, Jan M. Nordbotten, A. Radu Forin. See [arXiv pre-print](https://arxiv.org/abs/1906.05831).
+"*Robust linear domain decomposition schemes for reduced non-linear fracture flow models*" by Elyes Ahmed, Alessio Fumagalli, Ana Budiša, Eirik Keilegavlen, Jan M. Nordbotten, A. Radu Florin. See [arXiv pre-print](https://arxiv.org/abs/1906.05831).
 
 # Reproduce results from paper
 Runscripts for all test cases of the work available [here](./examples).<br>
