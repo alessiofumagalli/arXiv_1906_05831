@@ -17,4 +17,4 @@ If you want to run the code you need to install [PorePy](https://github.com/pmgb
 Newer versions of PorePy may not be compatible with this repository.
 
 # License
-See [license md](./LICENSE.md).
+See [license](./LICENSE).
